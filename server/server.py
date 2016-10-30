@@ -12,8 +12,17 @@ from pymongo import MongoClient
 @cherrypy.expose
 class BumpinessAnalytics(object):
     def GET(self, sessionId):
-        json_data = getRideData(sessionId)
-        return bumpiness(json_data['ride_data'])
+        json_data = getRideDataById(sessionId)
+        return str(bumpiness(json_data['ride_data']))
+
+def getRideDataById(sessionId):
+    client = db_connect()
+    db = client.rate_your_ride
+    
+    json_results = db.data.find_one({'session_id': sessionId})
+
+    cherrypy.log(str(json_results))
+    return json_results
 
 def bumpiness(data):
     TRIGGER_LEVEL = 8
@@ -26,8 +35,6 @@ def bumpiness(data):
         if abs(data[i-1] - data[i]) > TRIGGER_LEVEL and abs(data[i+1] - data[i]) > TRIGGER_LEVEL:
             triggerCount = triggerCount + 1
             triggerPoints.append(i)
-        print "Trigger points: "
-        print triggerPoints
     return triggerCount / totalCount
 
 
@@ -35,17 +42,18 @@ def bumpiness(data):
 @cherrypy.expose
 class RideAnalytics(object):
     @cherrypy.tools.json_out()
-    def POST(self):
+    def GET(self):
         # Get most recent json ride data
         json_data = getRideData()
-        return json_data
+        return_data = {}
+        return_data['ride_data'] = json_data['ride_data']
+        return return_data
 
 def getRideData():
     client = db_connect()
     db = client.rate_your_ride
     
-    collection = db.data
-    json_results = collection.find().limit(1).sort({'$natural':-1})
+    json_results = db.data.find_one()
 
     cherrypy.log(str(json_results))
     return json_results
@@ -160,6 +168,10 @@ if __name__ == '__main__':
             'tools.sessions.on': True,
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+        },
+        '/chart': {
+            'tools.staticfile.on': True,
+            'tools.staticfile.filename': '/var/www/html/index.html'
         }
     }
     cherrypy.config.update({'server.socket_host': '0.0.0.0',
