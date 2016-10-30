@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -18,6 +19,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -29,10 +33,20 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     final private static int STATE_CONNECTING = 3;
     final private static int STATE_CONNECTED = 4;
 
+    private String sessionID;
 
     //Oh sweet mercy this is gonna be a fat array
-    private ArrayList<Long> dataArray;
+    private JSONArray dataArray;
     private int state;
+
+
+    private final int REFRESH_RATE = 100;
+    //Handler for timer
+    private Handler mHandler;
+
+    private boolean shouldAppendData = false;
+    //starting the time
+    private long startTime;
 
     private boolean scanStarted;
     private boolean scanning;
@@ -47,6 +61,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     private Button scanButton;
     private TextView deviceInfoText;
     private TextView connectionStatusText;
+    private TextView timeElapsedTextView;
     private Button connectButton;
     private EditData valueEdit;
     private Button startTripButton;
@@ -112,9 +127,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dataArray = new ArrayList<Long>();
+        dataArray = new JSONArray();
         Log.e("Networks:","Sending network task");
         new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","1");
+        mHandler = new Handler();
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -164,10 +180,13 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         startTripButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                shouldAppendData=true;
                 startTripButton.setEnabled(false);
                 finishTripButton.setEnabled(true);
-                //TODO: Work on communicating with Simblee
-                rfduinoService.send(new byte[]{0});
+
+                startTime = System.currentTimeMillis();
+
+
             }
         });
 
@@ -175,10 +194,18 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         finishTripButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                shouldAppendData = false;
                 finishTripButton.setEnabled(false);
                 startTripButton.setEnabled(true);
-                //TODO: Work on communicating with Simblee
-                rfduinoService.send(new byte[]{0});
+
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put("data", dataArray);
+                }
+                catch(Exception e) {
+                    Log.e("Lol",e.toString());
+                }
+                new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","0",obj.toString());
             }
         });
 
@@ -188,10 +215,8 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             @Override
             public void onClick(View v) {
 
-                //Remove this eventually
-                Log.e("asdf",dataArray.toString());
-                //dataLayout.removeAllViews();
-                new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","0");
+                Intent intent = new Intent(getApplicationContext(), viewMetricsActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -289,13 +314,13 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             }
         }
 
-        Log.e("The data:",value.toString());
-        if(finishTripButton.isEnabled()) {
-            dataArray.add(value);
+
+        Log.e("The data:",dataArray.toString());
+        Log.e("asdf", "Add stuff to dataArray");
+        if(shouldAppendData) {
+            dataArray.put(value);
         }
-        else {
-            Log.e("Receiving Data:","Receiving data, but not appending!");
-        }
+
 
         View view = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, dataLayout, false);
 
@@ -309,8 +334,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             text2.setText(ascii);
         }
 
-        dataLayout.addView(
-                view, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        if(shouldAppendData) {
+            dataLayout.addView(
+                    view, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     @Override
