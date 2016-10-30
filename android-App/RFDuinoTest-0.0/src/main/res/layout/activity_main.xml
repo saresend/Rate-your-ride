@@ -91,21 +91,14 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/textView5"
-            android:text="Send"
+            android:text=""
             android:layout_marginTop="5dip" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Value:"
+            android:text=""
             android:id="@+id/textView6" />
-
-        <view
-            class="com.lannbox.rfduinotest.EditData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/value" />
-
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="fill_parent"
@@ -115,16 +108,16 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Send Zero"
-                android:id="@+id/sendZero"
+                android:text="Start Trip"
+                android:id="@+id/startTrip"
                 android:layout_weight="1"
                 android:enabled="false" />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Send Value"
-                android:id="@+id/sendValue"
+                android:text="Finish Trip"
+                android:id="@+id/finishTrip"
                 android:layout_weight="1"
                 android:enabled="false" />
 
@@ -141,7 +134,7 @@
         <Button
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Clear Data"
+            android:text="Get Metrics"
             android:id="@+id/clearData"
             android:layout_weight="1"
             android:layout_marginTop="2dip"

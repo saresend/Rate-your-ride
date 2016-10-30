@@ -31,7 +31,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
 
     //Oh sweet mercy this is gonna be a fat array
-    private ArrayList<Integer> dataArray;
+    private ArrayList<Long> dataArray;
     private int state;
 
     private boolean scanStarted;
@@ -49,8 +49,8 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     private TextView connectionStatusText;
     private Button connectButton;
     private EditData valueEdit;
-    private Button sendZeroButton;
-    private Button sendValueButton;
+    private Button startTripButton;
+    private Button finishTripButton;
     private Button clearButton;
     private LinearLayout dataLayout;
 
@@ -112,7 +112,9 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dataArray = new ArrayList<Integer>();
+        dataArray = new ArrayList<Long>();
+        Log.e("Networks:","Sending network task");
+        new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","1");
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -158,33 +160,25 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             }
         });
 
-        // Send
-        valueEdit = (EditData) findViewById(R.id.value);
-        valueEdit.setImeOptions(EditorInfo.IME_ACTION_SEND);
-        valueEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    sendValueButton.callOnClick();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        sendZeroButton = (Button) findViewById(R.id.sendZero);
-        sendZeroButton.setOnClickListener(new View.OnClickListener() {
+        startTripButton = (Button) findViewById(R.id.startTrip);
+        startTripButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                startTripButton.setEnabled(false);
+                finishTripButton.setEnabled(true);
+                //TODO: Work on communicating with Simblee
                 rfduinoService.send(new byte[]{0});
             }
         });
 
-        sendValueButton = (Button) findViewById(R.id.sendValue);
-        sendValueButton.setOnClickListener(new View.OnClickListener() {
+        finishTripButton = (Button) findViewById(R.id.finishTrip);
+        finishTripButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rfduinoService.send(valueEdit.getData());
+                finishTripButton.setEnabled(false);
+                startTripButton.setEnabled(true);
+                //TODO: Work on communicating with Simblee
+                rfduinoService.send(new byte[]{0});
             }
         });
 
@@ -193,8 +187,11 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                //Remove this eventually
                 Log.e("asdf",dataArray.toString());
-                dataLayout.removeAllViews();
+                //dataLayout.removeAllViews();
+                new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","0");
             }
         });
 
@@ -274,22 +271,37 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         connectButton.setEnabled(bluetoothDevice != null && state == STATE_DISCONNECTED);
 
         // Send
-        sendZeroButton.setEnabled(connected);
-        sendValueButton.setEnabled(connected);
+        startTripButton.setEnabled(connected);
+        //finishTripButton.setEnabled(connected);
     }
 
     private void addData(byte[] data) {
 
-        
-        //TODO: Get byte values to ints
-        String hexString = HexAsciiHelper.bytesToAsciiMaybe(data);
-        Log.e("asdf",hexString);
-        dataArray.add(Integer.parseInt(hexString,16));
+        Long value = 0L;
+
+        for(int i = 0; i < data.length;i++) {
+            if(data[i] < 0) {
+                value += -data[i];
+
+            }
+            else {
+                value += data[i];
+            }
+        }
+
+        Log.e("The data:",value.toString());
+        if(finishTripButton.isEnabled()) {
+            dataArray.add(value);
+        }
+        else {
+            Log.e("Receiving Data:","Receiving data, but not appending!");
+        }
 
         View view = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, dataLayout, false);
 
         TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-        text1.setText(HexAsciiHelper.bytesToHex(data));
+        text1.setText(value.toString());
+        //text1.setText(HexAsciiHelper.bytesToHex(data));
 
         String ascii = HexAsciiHelper.bytesToAsciiMaybe(data);
         if (ascii != null) {
