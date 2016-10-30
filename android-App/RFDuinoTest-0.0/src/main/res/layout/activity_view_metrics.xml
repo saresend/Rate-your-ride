@@ -31,14 +31,17 @@
     <TextView
         android:text = "Loading..."
         android:layout_below="@id/bumpinessText"
-
+        android:id="@+id/bumpValue"
         android:textSize="50dp"
         android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:paddingBottom="30dp"/>
 
-    <ImageView
-        android:layout_width="wrap_content"
+    <WebView
+        android:id="@+id/graphView"
+        android:layout_below="@id/bumpValue"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"/>
