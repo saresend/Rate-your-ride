@@ -23,7 +23,10 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class MainActivity extends Activity implements BluetoothAdapter.LeScanCallback {
@@ -47,6 +50,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
     private boolean shouldAppendData = false;
     //starting the time
     private long startTime;
+    private Timer mTimer;
 
     private boolean scanStarted;
     private boolean scanning;
@@ -122,10 +126,34 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         }
     };
 
+
+    private void TimerMethod() {
+        this.runOnUiThread(Timer_Tick);
+    }
+    private Runnable Timer_Tick = new Runnable() {
+        @Override
+        public void run() {
+            String df = DateFormat.getInstance().format(System.currentTimeMillis());
+            TextView timerView = (TextView) findViewById(R.id.textView5);
+            long secondVal = (System.currentTimeMillis() - startTime)/1000;
+            timerView.setText("RIDE TIME: "+ (Long.toString(secondVal)));
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mTimer = new Timer();
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(shouldAppendData) {
+                    TimerMethod();
+                }
+            }
+        },0,1000);
+
 
         dataArray = new JSONArray();
         Log.e("Networks:","Sending network task");
@@ -180,6 +208,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         startTripButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                startTime = System.currentTimeMillis();
                 shouldAppendData=true;
                 startTripButton.setEnabled(false);
                 finishTripButton.setEnabled(true);
@@ -216,6 +245,8 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                TextView timerView = (TextView) findViewById(R.id.textView5);
+                timerView.setText("Ride Time: ");
 
                 Intent intent = new Intent(getApplicationContext(), viewMetricsActivity.class);
                 startActivity(intent);

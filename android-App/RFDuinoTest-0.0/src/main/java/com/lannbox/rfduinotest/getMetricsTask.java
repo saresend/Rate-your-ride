@@ -50,9 +50,12 @@ public class getMetricsTask extends AsyncTask {
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        String trunValue = o.toString().substring(0,3);
-        TextView bumpView = (TextView) myActivity.findViewById(R.id.bumpValue);
-        bumpView.setText(trunValue);
+        if(o != null) {
+            super.onPostExecute(o);
+
+            String trunValue = o.toString().substring(0, 3);
+            TextView bumpView = (TextView) myActivity.findViewById(R.id.bumpValue);
+            bumpView.setText(trunValue);
+        }
     }
 }

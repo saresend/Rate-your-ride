@@ -29,7 +29,7 @@ public class viewMetricsActivity extends Activity {
 
         WebView graphView = (WebView) findViewById(R.id.graphView);
         graphView.getSettings().setJavaScriptEnabled(true);
-        graphView.loadUrl("https://joeljgeorge.github.io/data_graph/");
+        graphView.loadUrl("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/chart/");
 
 
     }
