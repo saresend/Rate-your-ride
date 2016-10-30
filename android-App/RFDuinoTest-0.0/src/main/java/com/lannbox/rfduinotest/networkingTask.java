@@ -31,7 +31,7 @@ public class networkingTask extends AsyncTask<String,Integer,String> {
             try {
 
                 String responseString;
-                String baseString = "http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input";
+                String baseString = "http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/";
                 URL baseUrl = new URL(baseString);
                 HttpURLConnection connector = (HttpURLConnection) baseUrl.openConnection();
                 InputStream response = connector.getInputStream();
@@ -41,6 +41,8 @@ public class networkingTask extends AsyncTask<String,Integer,String> {
                 while ((responseString = bufRead.readLine()) != null) {
                     sb.append(responseString);
                 }
+                globals global = globals.getInstance();
+                global.setSessionID(sb.toString());
                 Log.e("dasf", sb.toString());
             } catch (Exception e) {
                 Log.e("Errors:", e.toString());
@@ -62,8 +64,9 @@ public class networkingTask extends AsyncTask<String,Integer,String> {
                 urlConnection.setReadTimeout(15000);
                 urlConnection.setConnectTimeout(15000);
                 OutputStream outputPost = urlConnection.getOutputStream();
+                Log.e("Session id:",globals.getInstance().getSessionID());
 
-                outputPost.write((urlParameters+jsonString).getBytes());
+                outputPost.write((urlParameters+jsonString+"&"+"sessionId="+globals.getInstance().getSessionID()).getBytes());
 
 
                 outputPost.flush();

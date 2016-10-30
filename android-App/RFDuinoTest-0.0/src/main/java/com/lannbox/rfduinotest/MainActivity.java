@@ -129,7 +129,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
 
         dataArray = new JSONArray();
         Log.e("Networks:","Sending network task");
-        new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","1");
+        new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com","1");
         mHandler = new Handler();
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -205,7 +205,9 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
                 catch(Exception e) {
                     Log.e("Lol",e.toString());
                 }
-                new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/test_input","0",obj.toString());
+                new networkingTask().execute("http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com","0",obj.toString());
+                dataArray = new JSONArray();
+                dataLayout.removeAllViews();
             }
         });
 
@@ -325,8 +327,10 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
         View view = getLayoutInflater().inflate(android.R.layout.simple_list_item_2, dataLayout, false);
 
         TextView text1 = (TextView) view.findViewById(android.R.id.text1);
-        text1.setText(value.toString());
-        //text1.setText(HexAsciiHelper.bytesToHex(data));
+        if(shouldAppendData) {
+            text1.setText(value.toString());
+            //text1.setText(HexAsciiHelper.bytesToHex(data));
+        }
 
         String ascii = HexAsciiHelper.bytesToAsciiMaybe(data);
         if (ascii != null) {

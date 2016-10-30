@@ -12,7 +12,7 @@ public class viewMetricsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_metrics);
 
-        new getMetricsTask().execute();
+        //new getMetricsTask().execute();
 
 
         CharSequence text = "Please wait while we load your latest metrics!";
