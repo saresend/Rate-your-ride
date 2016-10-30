@@ -1,0 +1,878 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;31.&nbsp;Multi-project Builds</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle"><link rel="next" href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks"></head><body><div class="navheader"><div><div class="navbar"><a href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle">Previous</a><span>|</span><a href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;31.&nbsp;Multi-project Builds"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="multi_project_builds"></a>Chapter&nbsp;31.&nbsp;Multi-project Builds</h1></div></div></div><p>The powerful support for multi-project builds is one of Gradle's unique selling points. This topic is also the
+        most intellectually challenging.
+    </p><div class="section" title="31.1.&nbsp;Cross project configuration"><div class="titlepage"><div><div><h2 class="title"><a name="sec:cross_project_configuration"></a>31.1.&nbsp;Cross project configuration</h2></div></div></div><p>Let's start with a very simple multi-project build. After all Gradle is a general purpose build tool at
+            its core, so the projects don't have to be java projects. Our first examples are about marine life.
+        </p><div class="section" title="31.1.1.&nbsp;Defining common behavior"><div class="titlepage"><div><div><h3 class="title"><a name="N13337"></a>31.1.1.&nbsp;Defining common behavior</h3></div></div></div><p>We have the following project tree. This is a multi-project build with a root project
+                <code class="literal">water</code> and a subproject <code class="literal">bluewhale</code>.
+            </p><div class="example"><a name="multiprojectFirstExample"></a><p class="title"><b>Example&nbsp;31.1.&nbsp;Multi-project tree - water &amp; bluewhale projects</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">water/
+  build.gradle
+  settings.gradle
+  bluewhale/</pre><div class="exampleLocation" title="Tip"><p>
+              <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/firstExample/water</code>
+            </p></div><p>
+            <code class="filename">settings.gradle</code>
+          </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'bluewhale'</span></pre></div></div><br class="example-break"><p>And where is the build script for the <code class="literal">bluewhale</code> project? In Gradle build scripts are optional.
+                Obviously for a single project build, a project without a build script doesn't make much sense. For
+                multiproject builds the situation is different. Let's look at the build script for the <code class="literal">water</code> project and
+                execute it:
+            </p><div class="example"><a name="multiprojectFirstExample"></a><p class="title"><b>Example&nbsp;31.2.&nbsp;Build script of water (parent) project</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">Closure cl = { task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+task hello &lt;&lt; cl
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':bluewhale'</span>) {
+    task hello &lt;&lt; cl
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+          </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale</pre></div></div><br class="example-break"><p>Gradle allows you to access any project of the multi-project build from any build script. The Project
+                API provides a method called <code class="literal">project()</code>, which takes a path as an argument and returns
+                the Project object for this path. The capability to configure a project build from any build script we
+                call <em class="firstterm">cross project configuration</em>. Gradle implements this via
+                <em class="firstterm">configuration injection</em>.
+            </p><p>We are not that happy with the build script of the <code class="literal">water</code>  project. It is inconvenient to add the task
+                explicitly for every project. We can do better. Let's first add another project called
+                <code class="literal">krill</code> to our multi-project build.
+            </p><div class="example"><a name="multiprojectAddKrill"></a><p class="title"><b>Example&nbsp;31.3.&nbsp;Multi-project tree - water, bluewhale  &amp; krill projects</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">water/
+  build.gradle
+  settings.gradle
+  bluewhale/
+  krill/</pre><div class="exampleLocation" title="Tip"><p>
+              <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/addKrill/water</code>
+            </p></div><p>
+            <code class="filename">settings.gradle</code>
+          </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'bluewhale'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'krill'</span></pre></div></div><br class="example-break"><p>Now we rewrite the <code class="literal">water</code> build script and boil it down to a single line.</p><div class="example"><a name="multiprojectAddKrill"></a><p class="title"><b>Example&nbsp;31.4.&nbsp;Water project build script</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; { task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+          </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+I'm krill</pre></div></div><br class="example-break"><p>Is this cool or is this cool? And how does this work? The Project API provides a property
+                <code class="literal">allprojects</code>
+                which returns a list with the current project and all its subprojects underneath it. If you call
+                <code class="literal">allprojects</code>
+                with a closure, the statements of the closure are delegated to the projects associated with <code class="literal">
+                    allprojects</code>. You could also do an iteration via <code class="literal">allprojects.each</code>, but
+                that would be more verbose.
+            </p><p>Other build systems use inheritance as the primary means for defining common behavior. We also offer
+                inheritance for projects as you will see later. But Gradle uses configuration injection as the usual way
+                of defining common behavior. We think it provides a very powerful and flexible way of configuring
+                multiproject builds.
+            </p></div></div><div class="section" title="31.2.&nbsp;Subproject configuration"><div class="titlepage"><div><div><h2 class="title"><a name="sec:subproject_configuration"></a>31.2.&nbsp;Subproject configuration</h2></div></div></div><p>The Project API also provides a property for accessing the subprojects only.
+        </p><div class="section" title="31.2.1.&nbsp;Defining common behavior"><div class="titlepage"><div><div><h3 class="title"><a name="N133D2"></a>31.2.1.&nbsp;Defining common behavior</h3></div></div></div><div class="example"><a name="multiprojectUseSubprojects"></a><p class="title"><b>Example&nbsp;31.5.&nbsp;Defining common behaviour of all projects and subprojects</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; {task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}
+subprojects {
+    hello &lt;&lt; {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I depend on water"</span>}
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+          </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+- I depend on water
+I'm krill
+- I depend on water</pre></div></div><br class="example-break"></div><div class="section" title="31.2.2.&nbsp;Adding specific behavior"><div class="titlepage"><div><div><h3 class="title"><a name="sub:adding_specific_behavior"></a>31.2.2.&nbsp;Adding specific behavior</h3></div></div></div><p>You can add specific behavior on top of the common behavior. Usually we put the project specific
+                behavior in the build script of the project where we want to apply this specific behavior. But as we
+                have already seen, we don't have to do it this way. We could add project specific behavior for the
+                <code class="literal">bluewhale</code> project like this:
+            </p><div class="example"><a name="multiprojectSubprojectsAddFromTop"></a><p class="title"><b>Example&nbsp;31.6.&nbsp;Defining specific behaviour for particular project</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; {task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}
+subprojects {
+    hello &lt;&lt; {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I depend on water"</span>}
+}
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':bluewhale'</span>).hello &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm the largest animal that has ever lived on this planet."</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+          </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+- I depend on water
+I'm the largest animal that has ever lived on this planet.
+I'm krill
+- I depend on water</pre></div></div><br class="example-break"><p>As we have said, we usually prefer to put project specific behavior into the build script of this
+                project. Let's refactor and also add some project specific behavior to the <code class="literal">krill</code>
+                project.
+            </p><div class="example"><a name="multiprojectSpreadSpecifics"></a><p class="title"><b>Example&nbsp;31.7.&nbsp;Defining specific behaviour for project krill</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">water/
+  build.gradle
+  settings.gradle
+  bluewhale/
+    build.gradle
+  krill/
+    build.gradle</pre><div class="exampleLocation" title="Tip"><p>
+              <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/spreadSpecifics/water</code>
+            </p></div><p>
+            <code class="filename">settings.gradle</code>
+          </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'bluewhale'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'krill'</span></pre><p>
+            <code class="filename">bluewhale/build.gradle</code>
+          </p><pre class="programlisting">hello.doLast { println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I'm the largest animal that has ever lived on this planet."</span> }</pre><p>
+            <code class="filename">krill/build.gradle</code>
+          </p><pre class="programlisting">hello.doLast {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- The weight of my species in summer is twice as heavy as all human beings."</span>
+}</pre><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; {task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}
+subprojects {
+    hello &lt;&lt; {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I depend on water"</span>}
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+          </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+- I depend on water
+- I'm the largest animal that has ever lived on this planet.
+I'm krill
+- I depend on water
+- The weight of my species in summer is twice as heavy as all human beings.</pre></div></div><br class="example-break"></div><div class="section" title="31.2.3.&nbsp;Project filtering"><div class="titlepage"><div><div><h3 class="title"><a name="sub:project_filtering"></a>31.2.3.&nbsp;Project filtering</h3></div></div></div><p>To show more of the power of configuration injection, let's add another project
+                called <code class="literal">tropicalFish</code> and add more behavior to the build via the build script of the
+                <code class="literal">water</code> project.
+            </p><div class="section" title="31.2.3.1.&nbsp;Filtering by name"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:filtering_by_name"></a>31.2.3.1.&nbsp;Filtering by name</h4></div></div></div><div class="example"><a name="multiprojectAddTropical"></a><p class="title"><b>Example&nbsp;31.8.&nbsp;Adding custom behaviour to some projects (filtered by project name)</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">water/
+  build.gradle
+  settings.gradle
+  bluewhale/
+    build.gradle
+  krill/
+    build.gradle
+  tropicalFish/</pre><div class="exampleLocation" title="Tip"><p>
+                <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/addTropical/water</code>
+              </p></div><p>
+              <code class="filename">settings.gradle</code>
+            </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'bluewhale'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'krill'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'tropicalFish'</span></pre><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; {task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}
+subprojects {
+    hello &lt;&lt; {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I depend on water"</span>}
+}
+configure(subprojects.findAll {it.name != <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'tropicalFish'</span>}) {
+    hello &lt;&lt; {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'- I love to spend time in the arctic waters.'</span>}
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+            </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+- I depend on water
+- I love to spend time in the arctic waters.
+- I'm the largest animal that has ever lived on this planet.
+I'm krill
+- I depend on water
+- I love to spend time in the arctic waters.
+- The weight of my species in summer is twice as heavy as all human beings.
+I'm tropicalFish
+- I depend on water</pre></div></div><br class="example-break"><p>The <code class="literal">configure()</code> method takes a list as an argument and applies the
+                    configuration to the projects in this list.
+                </p></div><div class="section" title="31.2.3.2.&nbsp;Filtering by properties"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:filtering_by_properties"></a>31.2.3.2.&nbsp;Filtering by properties</h4></div></div></div><p>Using the project name for filtering is one option. Using dynamic project properties is another.
+                </p><div class="example"><a name="multiprojectTropicalWithProperties"></a><p class="title"><b>Example&nbsp;31.9.&nbsp;Adding custom behaviour to some projects (filtered by project properties)</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">water/
+  build.gradle
+  settings.gradle
+  bluewhale/
+    build.gradle
+  krill/
+    build.gradle
+  tropicalFish/
+    build.gradle</pre><div class="exampleLocation" title="Tip"><p>
+                <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/tropicalWithProperties/water</code>
+              </p></div><p>
+              <code class="filename">settings.gradle</code>
+            </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'bluewhale'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'krill'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'tropicalFish'</span></pre><p>
+              <code class="filename">bluewhale/build.gradle</code>
+            </p><pre class="programlisting">arctic = true
+hello.doLast { println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I'm the largest animal that has ever lived on this planet."</span> }</pre><p>
+              <code class="filename">krill/build.gradle</code>
+            </p><pre class="programlisting">arctic = true
+hello.doLast {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- The weight of my species in summer is twice as heavy as all human beings."</span>
+}</pre><p>
+              <code class="filename">tropicalFish/build.gradle</code>
+            </p><pre class="programlisting">arctic = false</pre><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">allprojects {
+    task hello &lt;&lt; {task -&gt; println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"I'm $task.project.name"</span> }
+}
+subprojects {
+    hello {
+        doLast {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I depend on water"</span>}
+        afterEvaluate { Project project -&gt;
+            <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (project.arctic) { doLast {
+                println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'- I love to spend time in the arctic waters.'</span> }
+            }
+        }
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+            </p><pre class="screen">&gt; gradle -q hello
+I'm water
+I'm bluewhale
+- I depend on water
+- I'm the largest animal that has ever lived on this planet.
+- I love to spend time in the arctic waters.
+I'm krill
+- I depend on water
+- The weight of my species in summer is twice as heavy as all human beings.
+- I love to spend time in the arctic waters.
+I'm tropicalFish
+- I depend on water</pre></div></div><br class="example-break"><p>In the build file of the <code class="literal">water</code> project we use an <code class="literal">afterEvaluate</code>
+                    notification. This means that the closure we are passing gets evaluated <span class="emphasis"><em>after</em></span>
+                    the build scripts of the subproject are evaluated. As the property <code class="literal">arctic</code>
+                    is set in those build scripts, we have to do it this way. You will find more on this topic in
+                    <a class="xref" href="multi_project_builds.html#sec:dependencies_which_dependencies" title="31.6.&nbsp;Dependencies - Which dependencies?">Section&nbsp;31.6, &ldquo;Dependencies - Which dependencies?&rdquo;</a>
+                </p></div></div></div><div class="section" title="31.3.&nbsp;Execution rules for multi-project builds"><div class="titlepage"><div><div><h2 class="title"><a name="sec:execution_rules_for_multi_project_builds"></a>31.3.&nbsp;Execution rules for multi-project builds</h2></div></div></div><p>When we have executed the <code class="literal">hello</code> task from the root project dir things behaved in an
+            intuitive way. All the <code class="literal">hello</code> tasks of the different projects were executed. Let's switch
+            to the <code class="literal">bluewhale</code> dir and see what happens if we execute Gradle from there.
+        </p><div class="example"><a name="multiprojectSubBuild"></a><p class="title"><b>Example&nbsp;31.10.&nbsp;Running build from subproject</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+        </p><pre class="screen">&gt; gradle -q hello
+I'm bluewhale
+- I depend on water
+- I'm the largest animal that has ever lived on this planet.
+- I love to spend time in the arctic waters.</pre></div></div><br class="example-break"><p>The basic rule behind Gradle's behavior is simple. Gradle looks down the hierarchy, starting with the
+            <span class="emphasis"><em>current dir</em></span>, for tasks with the name
+            <code class="literal">hello</code>
+            an executes them. One thing is very important to note. Gradle
+            <span class="emphasis"><em>always</em></span>
+            evaluates
+            <span class="emphasis"><em>every</em></span>
+            project of the multi-project build and creates all existing task objects. Then, according to the task name
+            arguments and the current dir, Gradle filters the tasks which should be executed. Because of Gradle's
+            cross project configuration <span class="emphasis"><em>every</em></span> project has to be evaluated before <span class="emphasis"><em>any</em></span>
+            task gets executed. We will have a closer look at this in the next section. Let's now have our last marine
+            example. Let's add a task to <code class="literal">bluewhale</code> and <code class="literal">krill</code>.
+        </p><div class="example"><a name="multiprojectPartialTasks"></a><p class="title"><b>Example&nbsp;31.11.&nbsp;Evaluation and execution of projects</b></p><div class="example-contents"><p>
+          <code class="filename">bluewhale/build.gradle</code>
+        </p><pre class="programlisting">arctic = true
+hello &lt;&lt; { println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- I'm the largest animal that has ever lived on this planet."</span> }
+
+task distanceToIceberg &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'20 nautical miles'</span>
+}</pre><p>
+          <code class="filename">krill/build.gradle</code>
+        </p><pre class="programlisting">arctic = true
+hello &lt;&lt; { println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"- The weight of my species in summer is twice as heavy as all human beings."</span> }
+
+task distanceToIceberg &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'5 nautical miles'</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q distanceToIceberg</code></strong>
+        </p><pre class="screen">&gt; gradle -q distanceToIceberg
+20 nautical miles
+5 nautical miles</pre></div></div><br class="example-break"><p>Here the output without the <code class="literal">-q</code> option:</p><div class="example"><a name="multiprojectPartialTasksNotQuiet"></a><p class="title"><b>Example&nbsp;31.12.&nbsp;Evaluation and execution of projects</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle distanceToIceberg</code></strong>
+        </p><pre class="screen">&gt; gradle distanceToIceberg
+:bluewhale:distanceToIceberg
+20 nautical miles
+:krill:distanceToIceberg
+5 nautical miles
+
+BUILD SUCCESSFUL
+
+Total time: 1 secs</pre></div></div><br class="example-break"><p>The build is executed from the <code class="literal">water</code> project. Neither <code class="literal">water</code> nor
+            <code class="literal">tropicalFish</code> have a task with the name <code class="literal">distanceToIceberg</code>. Gradle does
+            not care. The simple rule mentioned already above is: Execute all tasks down the hierarchy which have this
+            name. Only complain if there is <span class="emphasis"><em>no</em></span> such task!
+        </p></div><div class="section" title="31.4.&nbsp;Running tasks by their absolute path"><div class="titlepage"><div><div><h2 class="title"><a name="sec:running_partial_build_from_the_root"></a>31.4.&nbsp;Running tasks by their absolute path</h2></div></div></div><p>As we have seen, you can run a multi-project build by entering any subproject dir and execute the build
+            from there. All matching task names of the project hierarchy starting with the current dir are executed. But
+            Gradle also offers to execute tasks by their absolute path (see also <a class="xref" href="multi_project_builds.html#sec:project_and_task_paths" title="31.5.&nbsp;Project and task paths">Section&nbsp;31.5, &ldquo;Project and task paths&rdquo;</a>):
+        </p><div class="example"><a name="multiprojectAbsoluteTaskPaths"></a><p class="title"><b>Example&nbsp;31.13.&nbsp;Running tasks by their absolute path</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q :hello :krill:hello hello</code></strong>
+        </p><pre class="screen">&gt; gradle -q :hello :krill:hello hello
+I'm water
+I'm krill
+- I depend on water
+- The weight of my species in summer is twice as heavy as all human beings.
+- I love to spend time in the arctic waters.
+I'm tropicalFish
+- I depend on water</pre></div></div><br class="example-break"><p>The build is executed from the <code class="literal">tropicalFish</code> project. We execute the <code class="literal">hello</code>
+            tasks of the <code class="literal">water</code>, the <code class="literal">krill</code> and the <code class="literal">tropicalFish</code>
+            project. The first two tasks are specified by there absolute path, the last task is executed on the name
+            matching mechanism described above.
+        </p></div><div class="section" title="31.5.&nbsp;Project and task paths"><div class="titlepage"><div><div><h2 class="title"><a name="sec:project_and_task_paths"></a>31.5.&nbsp;Project and task paths</h2></div></div></div><p>A project path has the following pattern: It starts always with a colon, which denotes the root project.
+            The root project is the only project in a path that is not specified by its name. The path
+            <code class="literal">:bluewhale</code>
+            corresponds to the file system path
+            <code class="literal">water/project</code>
+            in the case of the example above.
+        </p><p>The path of a task is simply its project path plus the task name. For example <code class="literal">
+            :bluewhale:hello</code>. Within a project you can address a task of the same project just by its name.
+            This is interpreted as a relative path.
+        </p><p>Originally Gradle has used the
+            <code class="literal">'/'</code>
+            character as a natural path separator. With the introduction of directory tasks (see <a class="xref" href="tutorial_this_and_that.html#sec:directory_creation" title="11.1.&nbsp;Directory creation">Section&nbsp;11.1, &ldquo;Directory creation&rdquo;</a>) this was no longer possible, as the name of the directory task
+            contains the
+            <code class="literal">'/'</code>
+            character.
+        </p></div><div class="section" title="31.6.&nbsp;Dependencies - Which dependencies?"><div class="titlepage"><div><div><h2 class="title"><a name="sec:dependencies_which_dependencies"></a>31.6.&nbsp;Dependencies - Which dependencies?</h2></div></div></div><p>The examples from the last section were special, as the projects had no <span class="emphasis"><em>Execution
+            Dependencies</em></span>. They had only <span class="emphasis"><em>Configuration Dependencies</em></span>. Here is an example
+            where this is different:
+        </p><div class="section" title="31.6.1.&nbsp;Execution dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:execution_time_dependencies"></a>31.6.1.&nbsp;Execution dependencies</h3></div></div></div><div class="section" title="31.6.1.1.&nbsp;Dependencies and execution order"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:dependencies_and_execution_order"></a>31.6.1.1.&nbsp;Dependencies and execution order</h4></div></div></div><div class="example"><a name="multiprojectFirstMessages"></a><p class="title"><b>Example&nbsp;31.14.&nbsp;Dependencies and execution order</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">messages/
+  settings.gradle
+  consumer/
+    build.gradle
+  producer/
+    build.gradle</pre><div class="exampleLocation" title="Tip"><p>
+                <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/dependencies/firstMessages/messages</code>
+              </p></div><p>
+              <code class="filename">settings.gradle</code>
+            </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'consumer'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'producer'</span></pre><p>
+              <code class="filename">consumer/build.gradle</code>
+            </p><pre class="programlisting">task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message: "</span> +  System.getProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>)
+}</pre><p>
+              <code class="filename">producer/build.gradle</code>
+            </p><pre class="programlisting">task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q action</code></strong>
+            </p><pre class="screen">&gt; gradle -q action
+Consuming message: null
+Producing message:</pre></div></div><br class="example-break"><p>This did not work out. If nothing else is defined, Gradle executes the task in alphanumeric order.
+                    Therefore
+                    <code class="literal">:consumer:action</code>
+                    is executed before <code class="literal">:producer:action</code>. Let's try to solve this with a hack and
+                    rename the producer project to <code class="literal">aProducer</code>.
+                </p><div class="example"><a name="multiprojectMessagesHack"></a><p class="title"><b>Example&nbsp;31.15.&nbsp;Dependencies and execution order</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">messages/
+  settings.gradle
+  aProducer/
+    build.gradle
+  consumer/
+    build.gradle</pre><p>
+              <code class="filename">settings.gradle</code>
+            </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'consumer'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'aProducer'</span></pre><p>
+              <code class="filename">aProducer/build.gradle</code>
+            </p><pre class="programlisting">task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>
+              <code class="filename">consumer/build.gradle</code>
+            </p><pre class="programlisting">task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message: "</span> +  System.getProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q action</code></strong>
+            </p><pre class="screen">&gt; gradle -q action
+Producing message:
+Consuming message: Watch the order of execution.</pre></div></div><br class="example-break"><p>Now we take the air out of this hack. We simply switch to the <code class="literal">consumer</code> dir and
+                    execute the build.
+                </p><div class="example"><a name="multiprojectMessagesHackBroken"></a><p class="title"><b>Example&nbsp;31.16.&nbsp;Dependencies and execution order</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q action</code></strong>
+            </p><pre class="screen">&gt; gradle -q action
+Consuming message: null</pre></div></div><br class="example-break"><p>For Gradle the two
+                    <code class="literal">action</code>
+                    tasks are just not related. If you execute the build from the
+                    <code class="literal">messages</code>
+                    project Gradle executes them both because they have the same name and they are down the hierarchy.
+                    In the last example only one
+                    <code class="literal">action</code>
+                    was down the hierarchy and therefore it was the only task that got executed. We need something
+                    better than this hack.
+                </p></div><div class="section" title="31.6.1.2.&nbsp;Declaring dependencies"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:declaring_dependencies"></a>31.6.1.2.&nbsp;Declaring dependencies</h4></div></div></div><div class="example"><a name="multiprojectMessagesDependencies"></a><p class="title"><b>Example&nbsp;31.17.&nbsp;Declaring dependencies</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">messages/
+  settings.gradle
+  consumer/
+    build.gradle
+  producer/
+    build.gradle</pre><div class="exampleLocation" title="Tip"><p>
+                <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/dependencies/messagesWithDependencies/messages</code>
+              </p></div><p>
+              <code class="filename">settings.gradle</code>
+            </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'consumer'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'producer'</span></pre><p>
+              <code class="filename">consumer/build.gradle</code>
+            </p><pre class="programlisting">dependsOn(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>)
+
+task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message: "</span> +  System.getProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>)
+}</pre><p>
+              <code class="filename">producer/build.gradle</code>
+            </p><pre class="programlisting">task action &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q action</code></strong>
+            </p><pre class="screen">&gt; gradle -q action
+Producing message:
+Consuming message: Watch the order of execution.</pre></div></div><br class="example-break"><p>Running this from the <code class="literal">consumer</code> directory gives:</p><div class="example"><a name="multiprojectMessagesDependenciesSubBuild"></a><p class="title"><b>Example&nbsp;31.18.&nbsp;Declaring dependencies</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q action</code></strong>
+            </p><pre class="screen">&gt; gradle -q action
+Producing message:
+Consuming message: Watch the order of execution.</pre></div></div><br class="example-break"><p>We have now declared that the
+                    <code class="literal">consumer</code>
+                    project has an
+                    <span class="emphasis"><em>execution dependency</em></span>
+                    on the
+                    <code class="literal">producer</code>
+                    project. For Gradle declaring
+                    <span class="emphasis"><em>execution dependencies</em></span>
+                    between
+                    <span class="emphasis"><em>projects</em></span>
+                    is syntactic sugar. Under the hood Gradle creates task dependencies out of them. You can also create
+                    cross project tasks dependencies manually by using the absolute path of the tasks.
+                </p></div><div class="section" title="31.6.1.3.&nbsp;The nature of project dependencies"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:the_nature_of_project_dependencies"></a>31.6.1.3.&nbsp;The nature of project dependencies</h4></div></div></div><p>Let's change the naming of our tasks and execute the build.
+                </p><div class="example"><a name="multiprojectMessagesDifferentTaskNames"></a><p class="title"><b>Example&nbsp;31.19.&nbsp;Project execution dependencies</b></p><div class="example-contents"><p>
+              <code class="filename">consumer/build.gradle</code>
+            </p><pre class="programlisting">dependsOn(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>)
+
+task consume &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message: "</span> +  System.getProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>)
+}</pre><p>
+              <code class="filename">producer/build.gradle</code>
+            </p><pre class="programlisting">task produce &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q consume</code></strong>
+            </p><pre class="screen">&gt; gradle -q consume
+Consuming message: null</pre></div></div><br class="example-break"><p>Oops. Why does this not work? The
+                    <code class="literal">dependsOn</code>
+                    command is created for projects with a common lifecycle. Provided you have two Java projects were
+                    one depends on the other. If you trigger a compile for the dependent project you don't want that
+                    <span class="emphasis"><em>all</em></span>
+                    tasks of the other project get executed. Therefore a
+                    <code class="literal">dependsOn</code>
+                    creates dependencies between tasks with equal names. To deal with the scenario above you would do
+                    the following:
+                </p><div class="example"><a name="multiprojectMessagesTaskDependencies"></a><p class="title"><b>Example&nbsp;31.20.&nbsp;Cross project task dependencies</b></p><div class="example-contents"><p>
+              <code class="filename">consumer/build.gradle</code>
+            </p><pre class="programlisting">task consume(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer:produce'</span>) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message: "</span> +  System.getProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>)
+}</pre><p>
+              <code class="filename">producer/build.gradle</code>
+            </p><pre class="programlisting">task produce &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q consume</code></strong>
+            </p><pre class="screen">&gt; gradle -q consume
+Producing message:
+Consuming message: Watch the order of execution.</pre></div></div><br class="example-break"></div></div><div class="section" title="31.6.2.&nbsp;Configuration time dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:configuration_time_dependencies"></a>31.6.2.&nbsp;Configuration time dependencies</h3></div></div></div><p>Let's have one more example with our producer-consumer build before we enter
+                <span class="emphasis"><em>Java</em></span>
+                land. We add a property to the producer project and create now a configuration time dependency from
+                consumer on producer.
+            </p><div class="example"><a name="multiprojectMessagesConfigDependenciesBroken"></a><p class="title"><b>Example&nbsp;31.21.&nbsp;Configuration time dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">consumer/build.gradle</code>
+          </p><pre class="programlisting">key = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'unknown'</span>
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>).hasProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'key'</span>)) {
+    key = project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>).key
+}
+task consume(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer:produce'</span>) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message from key '$key': "</span> +  System.getProperty(key)
+}</pre><p>
+            <code class="filename">producer/build.gradle</code>
+          </p><pre class="programlisting">key = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.message'</span>
+
+task produce &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Producing message:"</span>
+    System.setProperty(key, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Watch the order of execution.'</span>)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q consume</code></strong>
+          </p><pre class="screen">&gt; gradle -q consume
+Producing message:
+Consuming message from key 'unknown': null</pre></div></div><br class="example-break"><p>The default
+                <span class="emphasis"><em>evaluation</em></span>
+                order of the projects is alphanumeric (for the same nesting level). Therefore the
+                <code class="literal">consumer</code>
+                project is evaluated before the
+                <code class="literal">producer</code>
+                project and the
+                <code class="literal">key</code>
+                value of the
+                <code class="literal">producer</code>
+                is set
+                <span class="emphasis"><em>after</em></span>
+                it is read by the
+                <code class="literal">consumer</code>
+                project. Gradle offers a solution for this.
+            </p><div class="example"><a name="multiprojectMessagesConfigDependencies"></a><p class="title"><b>Example&nbsp;31.22.&nbsp;Configuration time dependencies - evaluationDependsOn</b></p><div class="example-contents"><p>
+            <code class="filename">consumer/build.gradle</code>
+          </p><pre class="programlisting">evaluationDependsOn(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>)
+
+key = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'unknown'</span>
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>).hasProperty(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'key'</span>)) {
+    key = project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>).key
+}
+task consume(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer:produce'</span>) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message from key '$key': "</span> +  System.getProperty(key)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q consume</code></strong>
+          </p><pre class="screen">&gt; gradle -q consume
+Producing message:
+Consuming message from key 'org.gradle.message': Watch the order of execution.</pre></div></div><br class="example-break"><p>The command
+                <code class="literal">evaluationDependsOn</code>
+                triggers the evaluation of
+                <code class="literal">producer</code>
+                <span class="emphasis"><em>before</em></span>
+                <code class="literal">consumer</code>
+                is evaluated. The example is a bit contrived for the sake of showing the mechanism. In
+                <span class="emphasis"><em>this</em></span>
+                case there would be an easier solution by reading the key property at execution time.
+            </p><div class="example"><a name="multiprojectMessagesConfigDependenciesAltSolution"></a><p class="title"><b>Example&nbsp;31.23.&nbsp;Configuration time dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">consumer/build.gradle</code>
+          </p><pre class="programlisting">task consume(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer:produce'</span>) &lt;&lt; {
+    String key = project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':producer'</span>).key 
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Consuming message from key '$key': "</span> +  System.getProperty(key)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q consume</code></strong>
+          </p><pre class="screen">&gt; gradle -q consume
+Producing message:
+Consuming message from key 'org.gradle.message': Watch the order of execution.</pre></div></div><br class="example-break"><p>Configuration dependencies are very different to execution dependencies. Configuration dependencies
+                are between projects whereas execution dependencies are always resolved to task dependencies. Another
+                difference is that always all projects are configured, even when you start the build from a subproject.
+                The default configuration order is top down, which is usually what is needed.
+            </p><p>On the same nesting level the configuration order depends on the alphanumeric position. The most
+                common use case is to have multi-project builds that share a common lifecycle (e.g. all projects use the
+                Java plugin). If you declare with
+                <code class="literal">dependsOn</code>
+                a
+                <span class="emphasis"><em>execution dependency</em></span>
+                between different projects, the default behavior of this method is to create also a
+                <span class="emphasis"><em>configuration</em></span>
+                dependency between the two projects. Therefore it is likely that you don't have to define configuration
+                dependencies explicitly.
+            </p></div><div class="section" title="31.6.3.&nbsp;Real life examples"><div class="titlepage"><div><div><h3 class="title"><a name="sub:real_life_examples"></a>31.6.3.&nbsp;Real life examples</h3></div></div></div><p>Gradle's multi-project features are driven by real life use cases. The first example for describing
+                such a use case, consists of two webapplication projects and a parent project that creates a
+                distribution out of them.
+                <sup>[<a href="#ftn.N1373D" name="N1373D" class="footnote">27</a>]</sup>
+                For the example we use only one build script and do <span class="emphasis"><em>cross project configuration</em></span>.
+            </p><div class="example"><a name="webdist"></a><p class="title"><b>Example&nbsp;31.24.&nbsp;Dependencies - real life example - crossproject configuration</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">webDist/
+  settings.gradle
+  build.gradle
+  date/
+    src/main/java/org/gradle/sample/DateServlet.java
+  hello/
+    src/main/java/org/gradle/sample/HelloServlet.java</pre><div class="exampleLocation" title="Tip"><p>
+              <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/dependencies/webDist</code>
+            </p></div><p>
+            <code class="filename">settings.gradle</code>
+          </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'date'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello'</span></pre><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependsOnChildren()
+
+allprojects {
+    usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>)
+    group = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.sample'</span>
+    version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>
+}
+
+subprojects {
+    usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'war'</span>)
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        compile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"javax.servlet:servlet-api:2.5"</span>
+    }
+}
+
+task explodedDist(dependsOn: assemble) &lt;&lt; {
+    File explodedDist = mkdir(buildDir, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'explodedDist'</span>)
+    subprojects.each {project -&gt;
+        project.tasks.withType(Jar).each {archiveTask -&gt;
+            copy {
+                from archiveTask.archivePath
+                into explodedDist
+            }
+        }
+    }
+}</pre></div></div><br class="example-break"><p>We have an interesting set of dependencies. Obviously the
+                <code class="literal">date</code>
+                and
+                <code class="literal">hello</code>
+                task have a
+                <span class="emphasis"><em>configuration</em></span>
+                dependency on <code class="literal">webDist</code>, as all the build logic for the webapp projects is injected by
+                <code class="literal">webDist</code>. The
+                <span class="emphasis"><em>execution</em></span>
+                dependency is in the other direction, as
+                <code class="literal">webDist</code>
+                depends on the build artifacts of
+                <code class="literal">date</code>
+                and <code class="literal">hello</code>. There is even a third dependency.
+                <code class="literal">webDist</code>
+                has a
+                <span class="emphasis"><em>configuration</em></span>
+                dependency on
+                <code class="literal">date</code>
+                and
+                <code class="literal">hello</code>
+                because it needs to know the <code class="literal">archivePath</code>. But it asks for this information at
+                <span class="emphasis"><em>execution time</em></span>. Therefore we have no circular dependency.
+            </p><p>Such and other dependency patterns are daily bread in the problem space of multi-project builds. If a
+                build system does not support such patterns, you either can't solve your problem or you need to do ugly
+                hacks which are hard to maintain and massively afflict your productivity as a build master.
+            </p><p>There is one more thing to note from the current example. We have used the command <code class="literal">
+                dependOnChildren()</code>. It is a convenience method and calls the
+                <code class="literal">dependsOn</code>
+                method of the parent project for every child project (not every sub project). It declares a
+                <code class="literal">execution</code>
+                dependency of
+                <code class="literal">webDist</code>
+                on
+                <code class="literal">date</code>
+                and <code class="literal">hello</code>.
+            </p><p>Another use case would be a situation where the subprojects have a configuration
+                <span class="emphasis"><em>and</em></span>
+                execution dependency on the parent project. This is the case when the parent project does configuration
+                injection into its subprojects, and additionally produces something at execution time that is needed by
+                its child projects (e.g. code generation). In this case the parent project would call the
+                <code class="literal">childrenDependOnMe</code>
+                method to create an execution dependency for the child projects. We might add an example for this in a
+                future version of the user guide.
+            </p></div></div><div class="section" title="31.7.&nbsp;Project lib dependencies"><div class="titlepage"><div><div><h2 class="title"><a name="sec:project_jar_dependencies"></a>31.7.&nbsp;Project lib dependencies</h2></div></div></div><p>What if one projects needs the jar produced by another project in its compile path. And not just the jar
+            but also the transitive dependencies of this jar. Obviously this is a very common use case for Java
+            multi-project builds. As already mentioned in <a class="xref" href="dependency_management.html#sub:project_dependencies" title="28.3.4.&nbsp;Project dependencies">Section&nbsp;28.3.4, &ldquo;Project dependencies&rdquo;</a>, Gradle
+            offers project lib dependencies for this.
+        </p><div class="example"><a name="javadependencies_1"></a><p class="title"><b>Example&nbsp;31.25.&nbsp;Project lib dependencies</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">java/
+  settings.gradle
+  build.gradle
+  api/
+    src/main/java/org/gradle/sample/api/Person.java
+    src/main/java/org/gradle/sample/apiImpl/PersonImpl.java
+  services/
+    personService/
+      src/main/java/org/gradle/sample/services/PersonService.java
+      src/test/java/org/gradle/sample/services/PersonServiceTest.java
+  shared/
+    src/main/java/org/gradle/sample/shared/Helper.java</pre><div class="exampleLocation" title="Tip"><p>
+            <span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/userguide/multiproject/dependencies/java</code>
+          </p></div></div></div><br class="example-break"><p>We have the projects <code class="literal">shared</code>,
+            <code class="literal">api</code>
+            and <code class="literal">personService</code>.
+            <code class="literal">personService</code>
+            has a lib dependency on the other two projects.
+            <code class="literal">api</code>
+            has a lib dependency on <code class="literal">shared</code>.
+            <sup>[<a href="#ftn.N137E5" name="N137E5" class="footnote">28</a>]</sup>
+        </p><div class="example"><a name="javadependencies_2"></a><p class="title"><b>Example&nbsp;31.26.&nbsp;Project lib dependencies</b></p><div class="example-contents"><p>
+          <code class="filename">settings.gradle</code>
+        </p><pre class="programlisting">include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'api'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'shared'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'services:personService'</span></pre><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">subprojects {
+    repositories {
+        mavenCentral()
+    }
+    usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>)
+    group = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.sample'</span>
+    version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>
+}
+
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>) {
+    dependencies {
+        compile project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':shared'</span>)
+    }
+}
+
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':services:personService'</span>) {
+    dependencies {
+        compile project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':shared'</span>), project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>)
+        testCompile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"junit:junit:3.8.2"</span>
+    }
+}
+
+dependsOnChildren()</pre></div></div><br class="example-break"><p>All the build logic is in the
+            <code class="literal">build.gradle</code> of the root project.
+            <sup>[<a href="#ftn.N13805" name="N13805" class="footnote">29</a>]</sup>
+            A <span class="emphasis"><em>lib</em></span>
+            dependency is a special form of an execution dependency. It causes the other project to be build first and
+            adds the jar with the classes of the other project to the classpath. It also add the dependencies of the
+            other project to the classpath. So you can enter the
+            <code class="literal">api</code>
+            folder and trigger a <strong class="userinput"><code>gradle compile</code></strong>. First
+            <code class="literal">shared</code>
+            is build and then
+            <code class="literal">api</code>
+            is build. Project dependencies enable partial multi-project builds.
+        </p><p>If you come from Maven land you might be perfectly happy with this. If you come from Ivy land, you might
+            expect some more fine grained control. Gradle offers this to you:
+        </p><div class="example"><a name="javaWithCustomConf"></a><p class="title"><b>Example&nbsp;31.27.&nbsp;Fine grained control over dependencies</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">subprojects {
+    usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>)
+    group = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.sample'</span>
+    version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>
+}
+
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>) {
+    configurations {
+        spi
+    }
+    dependencies {
+        compile project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':shared'</span>)
+    }
+    task spiJar(type: Jar) {
+        baseName = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'api-spi'</span>
+        confs = [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spi'</span>]
+        fileSet() {
+            include(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org/gradle/sample/api/**'</span>)
+        }
+    }
+}
+
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':services:personService'</span>) {
+    dependencies {
+        compile project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':shared'</span>)
+        compile project(path: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>, configuration: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spi'</span>)
+        testCompile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"junit:junit:3.8.2"</span>, project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>)
+    }
+}</pre></div></div><br class="example-break"><p>The Java plugin adds per default a jar to your project libraries which contains all the classes. In this
+            example we create an
+            <span class="emphasis"><em>additional</em></span>
+            library containing only the interfaces of the
+            <code class="literal">api</code>
+            project. We assign this library to a new <span class="emphasis"><em>dependency configuration</em></span>. For the person
+            service we declare that the project should be compiled only against the
+            <code class="literal">api</code>
+            interfaces but tested with all classes from <code class="literal">api</code>.
+        </p><div class="section" title="31.7.1.&nbsp;Disable the build of dependency projects."><div class="titlepage"><div><div><h3 class="title"><a name="disable_dependency_projects"></a>31.7.1.&nbsp;Disable the build of dependency projects.</h3></div></div></div><p>Sometimes you don't want depended on projects to be built when doing a partial build.
+                To disable the build of the depended on projects you can run gradle with the <code class="code">-a</code> option.
+            </p></div></div><div class="section" title="31.8.&nbsp;Multi-Project Building and Testing"><div class="titlepage"><div><div><h2 class="title"><a name="sec:multiproject_build_and_test"></a>31.8.&nbsp;Multi-Project Building and Testing</h2></div></div></div><p>The <code class="literal">build</code> task of the Java plugin is typically used to compile, test, and perform
+            code style checks (if the CodeQuality plugin is used) of a single project.  In multi-project builds
+            you may often want to do all of these tasks across a range of projects.  The <code class="literal">buildNeeded</code>
+            and <code class="literal">buildDependents</code> tasks can help with this.
+        </p><p>Let's use the project structure shown in <a class="xref" href="multi_project_builds.html#javadependencies_2" title="Example&nbsp;31.26.&nbsp;Project lib dependencies">Example&nbsp;31.26, &ldquo;Project lib dependencies&rdquo;</a>.  In this
+            example :services:personservice depends on both :api and :shared.  The :api project also depends on
+            :shared.
+        </p><p>Assume you are working on a single project, the :api project.  You have been making changes, but
+            have not built the entire project since performing a clean.  You want to build any necessary supporting
+            jars, but only perform code quality and unit tests on the project you have changed.
+            The <code class="literal">build</code> task does this.
+        </p><div class="example"><a name="multitestingBuild"></a><p class="title"><b>Example&nbsp;31.28.&nbsp;Build and Test Single Project</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle :api:build</code></strong>
+        </p><pre class="screen">&gt; gradle :api:build
+:shared:compileJava&#13;
+:shared:processResources&#13;
+:shared:classes&#13;
+:shared:jar&#13;
+:shared:uploadDefaultInternal&#13;
+:api:compileJava&#13;
+:api:processResources&#13;
+:api:classes&#13;
+:api:jar&#13;
+:api:assemble&#13;
+:api:compileTestJava&#13;
+:api:processTestResources&#13;
+:api:testClasses&#13;
+:api:test&#13;
+:api:check&#13;
+:api:build&#13;
+&#13;
+BUILD SUCCESSFUL&#13;
+&#13;
+Total time: 1 secs</pre></div></div><br class="example-break"><p>While you are working in a typical development cycle repeatedly building and testing changes to a
+            the :api project (knowing that you are only changing files in this one project), you may not want to
+            even suffer the expense of :shared:compile checking to see what has changed in the :shared project.
+            Adding the <code class="literal">-a</code> option will cause gradle to use cached jars to resolve any project lib
+            dependencies and not try to re-build the depended on projects.
+        </p><div class="example"><a name="multitestingBuildDashA"></a><p class="title"><b>Example&nbsp;31.29.&nbsp;Partial Build and Test Single Project</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -a :api:build</code></strong>
+        </p><pre class="screen">&gt; gradle -a :api:build
+:api:compileJava&#13;
+:api:processResources&#13;
+:api:classes&#13;
+:api:jar&#13;
+:api:assemble&#13;
+:api:compileTestJava&#13;
+:api:processTestResources&#13;
+:api:testClasses&#13;
+:api:test&#13;
+:api:check&#13;
+:api:build&#13;
+&#13;
+BUILD SUCCESSFUL&#13;
+&#13;
+Total time: 1 secs</pre></div></div><br class="example-break"><p>If you have just gotten the latest version of source from your version control system which included changes
+            in other projects that :api depends on, you might want to not only build all the projects you depend on,
+            but test them as well. The <code class="literal">buildNeeded</code> task also tests all the projects from the
+            project lib dependencies of the testRuntime configuration.
+        </p><div class="example"><a name="multitestingBuildNeeded"></a><p class="title"><b>Example&nbsp;31.30.&nbsp;Build and Test Depended On Projects</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle :api:buildNeeded</code></strong>
+        </p><pre class="screen">&gt; gradle :api:buildNeeded
+:shared:compileJava&#13;
+:shared:processResources&#13;
+:shared:classes&#13;
+:shared:jar&#13;
+:shared:uploadDefaultInternal&#13;
+:api:compileJava&#13;
+:api:processResources&#13;
+:api:classes&#13;
+:api:jar&#13;
+:api:assemble&#13;
+:api:compileTestJava&#13;
+:api:processTestResources&#13;
+:api:testClasses&#13;
+:api:test&#13;
+:api:check&#13;
+:api:build&#13;
+:shared:assemble&#13;
+:shared:compileTestJava&#13;
+:shared:processTestResources&#13;
+:shared:testClasses&#13;
+:shared:test&#13;
+:shared:check&#13;
+:shared:build&#13;
+:api:buildNeeded&#13;
+&#13;
+BUILD SUCCESSFUL&#13;
+&#13;
+Total time: 3.656 secs</pre></div></div><br class="example-break"><p>You also might want to refactor some part of the :api project that is used in other projects.
+            If you make these types of changes, it is not sufficient to test just the :api,
+            project, you also need to test all projects that depend on the :api project.
+            The <code class="literal">buildDependents</code> task also tests all the projects that have a project lib dependency
+            (in the testRuntime configuration) on the specified project.
+        </p><div class="example"><a name="multitestingBuildDependents"></a><p class="title"><b>Example&nbsp;31.31.&nbsp;Build and Test Dependent Projects</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle :api:buildDependents</code></strong>
+        </p><pre class="screen">&gt; gradle :api:buildDependents
+:shared:compileJava&#13;
+:shared:processResources&#13;
+:shared:classes&#13;
+:shared:jar&#13;
+:shared:uploadDefaultInternal&#13;
+:api:compileJava&#13;
+:api:processResources&#13;
+:api:classes&#13;
+:api:jar&#13;
+:api:assemble&#13;
+:api:compileTestJava&#13;
+:api:processTestResources&#13;
+:api:testClasses&#13;
+:api:test&#13;
+:api:check&#13;
+:api:build&#13;
+:api:uploadDefaultInternal&#13;
+:services:personService:compileJava&#13;
+:services:personService:processResources&#13;
+:services:personService:classes&#13;
+:services:personService:jar&#13;
+:services:personService:assemble&#13;
+:services:personService:compileTestJava&#13;
+:services:personService:processTestResources&#13;
+:services:personService:testClasses&#13;
+:services:personService:test&#13;
+:services:personService:check&#13;
+:services:personService:build&#13;
+:api:buildDependents&#13;
+&#13;
+BUILD SUCCESSFUL&#13;
+&#13;
+Total time: 1 secs</pre></div></div><br class="example-break"><p>Finally, you may want to build and test everything in all projects.  If the root project has declared
+        <code class="literal">dependsOnChildren()</code> (as this one does), then any task you run against the root project
+        will cause that same named task to be run on all the children.  So you can just run
+        <code class="literal">gradle build</code> to build and test all projects.
+        </p></div><div class="section" title="31.9.&nbsp;Property and method inheritance"><div class="titlepage"><div><div><h2 class="title"><a name="sec:property_and_method_inheritance"></a>31.9.&nbsp;Property and method inheritance</h2></div></div></div><p>Properties and methods declared in a project are inherited to all its subprojects. This is an alternative
+            to configuration injection. But we think that the model of inheritance does not reflect the problem space of
+            multi-project builds very well. In a future edition of this user guide we might write more about this.
+        </p><p>Method inheritance might be interesting to use as Gradle's
+            <span class="emphasis"><em>Configuration Injection</em></span>
+            does not support methods yet (but will in a future release.).
+        </p><p>You might be wondering why we have implemented a feature we obviously don't like that much. One reason is
+            that it is offered by other tools and we want to have the check mark in a feature comparison :). And we like
+            to offer our users a choice.
+        </p></div><div class="section" title="31.10.&nbsp;Summary"><div class="titlepage"><div><div><h2 class="title"><a name="N138A9"></a>31.10.&nbsp;Summary</h2></div></div></div><p>Writing this chapter was pretty exhausting and reading it might have a similar effect. Our final message
+            for this chapter is that multi-project builds with Gradle are usually
+            <span class="emphasis"><em>not</em></span>
+            difficult. There are six elements you need to remember: <code class="literal">allproject</code>, <code class="literal">
+            subprojects</code>, <code class="literal">dependsOn</code>, <code class="literal">childrenDependOnMe</code>,
+            <code class="literal">dependOnChildren</code>
+            and project lib dependencies.
+            <sup>[<a href="#ftn.N138C0" name="N138C0" class="footnote">30</a>]</sup>
+            With those elements, and keeping in mind that Gradle has a distinct configuration and execution phase, you
+            have already a lot of flexibility. But when you enter steep territory Gradle does not become an obstacle and
+            usually accompanies and carries you to the top of the mountain.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N1373D" name="ftn.N1373D" class="para">27</a>] </sup>The real use case we had, was using <a class="ulink" href="http://lucene.apache.org/solr" target="_top">http://lucene.apache.org/solr</a>, where you
+                        need a separate war for each index your are accessing. That was one reason why we have created a
+                        distribution of webapps. The Resin servlet container allows us, to let such a distribution point
+                        to a base installation of the servlet container.
+                    </p></div><div class="footnote"><p><sup>[<a href="#N137E5" name="ftn.N137E5" class="para">28</a>] </sup>
+                    <code class="literal">services</code>
+                    is also a project, but we use it just as a container. It has no build script and gets nothing
+                    injected by another build script.
+                </p></div><div class="footnote"><p><sup>[<a href="#N13805" name="ftn.N13805" class="para">29</a>] </sup>We do this here, as it makes the layout a bit easier. We usually put the project specific stuff
+                    into the buildscript of the respective projects.
+                </p></div><div class="footnote"><p><sup>[<a href="#N138C0" name="ftn.N138C0" class="para">30</a>] </sup>So we are well in the range of the
+                    <a class="ulink" href="http://en.wikipedia.org/wiki/The_Magical_Number_Seven,_Plus_or_Minus_Two" target="_top">7 plus 2
+                        Rule
+                    </a>
+                    :)
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle">Previous</a><span>|</span><a href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

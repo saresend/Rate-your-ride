@@ -1,0 +1,79 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;26.&nbsp;The Eclipse Plugin</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="osgi_plugin.html" title="Chapter&nbsp;25.&nbsp;The OSGi Plugin"><link rel="next" href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="osgi_plugin.html" title="Chapter&nbsp;25.&nbsp;The OSGi Plugin">Previous</a><span>|</span><a href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;26.&nbsp;The Eclipse Plugin"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="eclipse_plugin"></a>Chapter&nbsp;26.&nbsp;The Eclipse Plugin</h1></div></div></div><div class="note" title="Note"><p>This chapter is a work in progress.</p></div><p>The Eclipse plugin generates files that are used by <a class="ulink" href="http://eclipse.org" target="_top">Eclipse IDE</a>, thus making it possible to import the project into Eclipse (<span class="guimenuitem">File</span> - <span class="guimenuitem">Import...</span> - <span class="guimenuitem">Existing Projects into Workspace</span>). Both external and project dependencies are considered.</p><p>To use the plugin, include in your build script:
+</p><pre class="programlisting">usePlugin('eclipse')</pre><p>
+</p><p>The Eclipse plugin will create different files depending on the other plugins used. If used together with the Java Plugin, <code class="filename">.project</code> and <code class="filename">.classpath</code> files will be generated. If used with the War plugin, additional wtp files will be generated.</p><div class="section" title="26.1.&nbsp;Usage"><div class="titlepage"><div><div><h2 class="title"><a name="N129A5"></a>26.1.&nbsp;Usage</h2></div></div></div><p>There are several tasks (presented in <a class="xref" href="eclipse_plugin.html#eclipsetasks" title="Table&nbsp;26.1.&nbsp;Eclipse plugin - tasks">Table&nbsp;26.1, &ldquo;Eclipse plugin - tasks&rdquo;</a>) that the Eclipse plugin provides, but you will probably use only <code class="literal">eclipse</code> task by executing <strong class="userinput"><code>gradle eclipse</code></strong>.
+</p></div><div class="section" title="26.2.&nbsp;Tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N129B3"></a>26.2.&nbsp;Tasks</h2></div></div></div><p>The Eclipse plugin adds the tasks shown in <a class="xref" href="eclipse_plugin.html#eclipsetasks" title="Table&nbsp;26.1.&nbsp;Eclipse plugin - tasks">Table&nbsp;26.1, &ldquo;Eclipse plugin - tasks&rdquo;</a> to a project.
+        </p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;26.1.&nbsp;Eclipse plugin - tasks</b></p><div class="table-contents"><table id="eclipsetasks"><thead><tr>
+                    <td>Task name</td>
+                    <td>Depends on</td>
+                    <td>Type</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">eclipse</code>
+                </td>
+                <td>
+            <code class="literal">eclipseCp</code>, <code class="literal">eclipseProject</code>, <code class="literal">eclipseWtp</code>
+          </td>
+                <td>
+            <code class="literal">-</code>
+          </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">eclipseClean</code>
+                </td>
+                <td>
+                    <code class="literal">-</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseClean.html" target="_top">
+              <code class="classname">EclipseClean</code>
+            </a>
+          </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">eclipseCp</code>
+                </td>
+                <td>
+                    <code class="literal">-</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseClasspath.html" target="_top">
+              <code class="classname">EclipseClasspath</code>
+            </a>
+          </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">eclipseProject</code>
+                </td>
+                <td>
+                    <code class="literal">-</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseProject.html" target="_top">
+              <code class="classname">EclipseProject</code>
+            </a>
+          </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">eclipseWtp</code>
+                </td>
+                <td>
+                    <code class="literal">-</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseWtp.html" target="_top">
+              <code class="classname">EclipseWtp</code>
+            </a>
+          </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">eclipseWtpModule</code>
+                </td>
+                <td>
+                    <code class="literal">-</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseWtpModule.html" target="_top">
+              <code class="classname">EclipseWtpModule</code>
+            </a>
+          </td>
+            </tr></table></div></div></div></div><div class="navfooter"><div><div class="navbar"><a href="osgi_plugin.html" title="Chapter&nbsp;25.&nbsp;The OSGi Plugin">Previous</a><span>|</span><a href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

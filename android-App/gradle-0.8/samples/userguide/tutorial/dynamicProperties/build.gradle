@@ -1,0 +1,6 @@
+task myTask
+myTask.myProperty = 'myCustomPropValue'
+
+task showProps << {
+    println myTask.myProperty
+}

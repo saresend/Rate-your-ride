@@ -1,0 +1,61 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Appendix&nbsp;A.&nbsp;Potential Traps</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="embedding.html" title="Chapter&nbsp;37.&nbsp;Embedding Gradle"><link rel="next" href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line"></head><body><div class="navheader"><div><div class="navbar"><a href="embedding.html" title="Chapter&nbsp;37.&nbsp;Embedding Gradle">Previous</a><span>|</span><a href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="appendix" title="Appendix&nbsp;A.&nbsp;Potential Traps"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="potential_traps"></a>Appendix&nbsp;A.&nbsp;Potential Traps</h1></div></div></div><div class="section" title="A.1.&nbsp;Groovy script variables"><div class="titlepage"><div><div><h2 class="title"><a name="sec:groovy_script_variables"></a>A.1.&nbsp;Groovy script variables</h2></div></div></div><p>For Gradle users it is important to understand how Groovy deals with script variables. Groovy has two types
+            of script variables. One with a local scope and one with a script wide scope.
+        </p><div class="example"><a name="scope"></a><p class="title"><b>Example&nbsp;A.1.&nbsp;Variables scope: local and script wide</b></p><div class="example-contents"><p>
+          <code class="filename">scope.groovy</code>
+        </p><pre class="programlisting">String localScope1 = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localScope1'</span>
+def localScope2 = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localScope2'</span>
+scriptScope = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'scriptScope'</span>
+
+println localScope1
+println localScope2
+println scriptScope
+
+closure = {
+    println localScope1
+    println localScope2
+    println scriptScope
+}
+
+def method() {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">try</span> {localScope1} <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">catch</span>(MissingPropertyException e) {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localScope1NotAvailable'</span> }
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">try</span> {localScope2} <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">catch</span>(MissingPropertyException e) {println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localScope2NotAvailable'</span> }
+    println scriptScope
+}
+
+closure.call()
+method()</pre><p>Output of <strong class="userinput"><code>gradle </code></strong>
+        </p><pre class="screen">&gt; gradle 
+localScope1
+localScope2
+scriptScope
+localScope1
+localScope2
+scriptScope
+localScope1NotAvailable
+localScope2NotAvailable
+scriptScope</pre></div></div><br class="example-break"><p>Variables which are declared with a type modifier are visible within closures but not visible within
+            methods. This is a heavily discussed behavior in the Groovy community.
+            <sup>[<a href="#ftn.N13B48" name="N13B48" class="footnote">35</a>]</sup>
+        </p></div><div class="section" title="A.2.&nbsp;Configuration and execution phase"><div class="titlepage"><div><div><h2 class="title"><a name="sec:configuration_and_execution_phase"></a>A.2.&nbsp;Configuration and execution phase</h2></div></div></div><p>It is important to keep in mind that Gradle has a distinct configuration and execution phase (see 
+            <a class="xref" href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle">Chapter&nbsp;30, <i>The Build Lifecycle</i></a>).
+        </p><div class="example"><a name="mkdirTrap"></a><p class="title"><b>Example&nbsp;A.2.&nbsp;Distinct configuration and execution phase</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">classesDir = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build/classes'</span>)
+classesDir.mkdirs()
+task clean &lt;&lt; {
+    ant.delete(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build'</span>)
+}
+task compile(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'clean'</span>) &lt;&lt; {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (!classesDir.isDirectory()) {
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'The class directory does not exist. I can not operate'</span>
+        <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+    }
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q compile</code></strong>
+        </p><pre class="screen">&gt; gradle -q compile
+The class directory does not exist. I can not operate</pre></div></div><br class="example-break"><p>As the creation of the directory happens during the configuration phase, the
+            <code class="literal">clean</code>
+            task removes the directory during the execution phase.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N13B48" name="ftn.N13B48" class="para">35</a>] </sup>One of those discussions can be found here:
+                    <a class="ulink" href="http://www.nabble.com/script-scoping-question-td16034724.html" target="_top">http://www.nabble.com/script-scoping-question-td16034724.html</a>
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="embedding.html" title="Chapter&nbsp;37.&nbsp;Embedding Gradle">Previous</a><span>|</span><a href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

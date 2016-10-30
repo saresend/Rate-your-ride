@@ -1,0 +1,46 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;25.&nbsp;The OSGi Plugin</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="code_quality_plugin.html" title="Chapter&nbsp;24.&nbsp;The Code Quality Plugin"><link rel="next" href="eclipse_plugin.html" title="Chapter&nbsp;26.&nbsp;The Eclipse Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="code_quality_plugin.html" title="Chapter&nbsp;24.&nbsp;The Code Quality Plugin">Previous</a><span>|</span><a href="eclipse_plugin.html" title="Chapter&nbsp;26.&nbsp;The Eclipse Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;25.&nbsp;The OSGi Plugin"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="osgi_plugin"></a>Chapter&nbsp;25.&nbsp;The OSGi Plugin</h1></div></div></div><p>The Gradle OSGi plugin enables the generation of an OSGi manifest. This OSGi manifest is automatically added
+        to all the JAR files produced by the project.
+        This plugin makes heavy use of Peter Kriens <a class="ulink" href="http://www.aqute.biz/Code/Bnd" target="_top">BND tool</a>.
+    </p><div class="section" title="25.1.&nbsp;Tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N12905"></a>25.1.&nbsp;Tasks</h2></div></div></div><p>TBD</p></div><div class="section" title="25.2.&nbsp;Project layout"><div class="titlepage"><div><div><h2 class="title"><a name="N1290A"></a>25.2.&nbsp;Project layout</h2></div></div></div><p>TBD</p></div><div class="section" title="25.3.&nbsp;Dependency management"><div class="titlepage"><div><div><h2 class="title"><a name="N1290F"></a>25.3.&nbsp;Dependency management</h2></div></div></div><p>TBD</p></div><div class="section" title="25.4.&nbsp;Convention properties"><div class="titlepage"><div><div><h2 class="title"><a name="N12914"></a>25.4.&nbsp;Convention properties</h2></div></div></div><p>The OSGi plugin adds an <code class="literal">osgi</code> property to every <span class="emphasis"><em>jar</em></span> task.
+            This <code class="literal">osgi</code> property points to an instance of
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/osgi/OsgiManifest.html" target="_top">
+          <code class="classname">OsgiManifest</code>
+        </a>. Via the OsgiManifest object you can control the
+            generation of the OSGi Manifest of the respective jar. The OSGi plugin assign default values to the
+            OsgiManifest object.
+        </p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;25.1.&nbsp;OSGi properties</b></p><div class="table-contents"><table id="N12929"><thead><tr>
+                    <td>Task Property</td>
+                    <td>Convention Property</td>
+                </tr></thead><tr>
+                <td>classesDir</td>
+                <td>project.classesDir</td>
+            </tr><tr>
+                <td>version</td>
+                <td>project.version</td>
+            </tr><tr>
+                <td>name</td>
+                <td>project.archivesBaseName</td>
+            </tr><tr>
+                <td>symbolicName</td>
+                <td>transformation of the name and the group to produce a valid OSGi symbolic name</td>
+            </tr><tr>
+                <td>classpath</td>
+                <td>project.dependencies.resolve('runtime')</td>
+            </tr></table></div></div><p>The classes in the classes dir are analyzed regarding there package dependencies and the packages they expose.
+            Based on this the <span class="emphasis"><em>Import-Package</em></span> and the <span class="emphasis"><em>Export-Package</em></span> values of the
+            OSGi Manifest are calculated. If the classpath contains jars with an OSGi bundle, the bundle
+            information is used to specify version information for the <span class="emphasis"><em>Import-Package</em></span>
+            value. Beside the explicit properties of the <code class="literal">OsgiManifest</code> object you can add instructions.
+        </p><div class="example"><a name="osgi"></a><p class="title"><b>Example&nbsp;25.1.&nbsp;Configuration of OSGi MANIFEST.MF file</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">configure(jar.osgi) {
+    name = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'overwrittenSpecialOsgiName'</span>
+    instruction <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Private-Package'</span>,
+            <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.mycomp.package1'</span>,
+            <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.mycomp.package2'</span>
+    instruction <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Bundle-Vendor'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'MyCompany'</span>
+    instruction <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Bundle-Description'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Platform2: Metrics 2 Measures Framework'</span>
+    instruction <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Bundle-DocURL'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'http://www.mycompany.com'</span>
+}</pre></div></div><br class="example-break"><p>The first argument of the instruction call is the key of the property. The other arguments form the value.
+            They are joined by Gradle with the <code class="literal">,</code> separator. To learn more about the available
+            instructions have a look at the <a class="ulink" href="http://www.aqute.biz/Code/Bnd" target="_top">BND tool</a>.</p></div></div><div class="navfooter"><div><div class="navbar"><a href="code_quality_plugin.html" title="Chapter&nbsp;24.&nbsp;The Code Quality Plugin">Previous</a><span>|</span><a href="eclipse_plugin.html" title="Chapter&nbsp;26.&nbsp;The Eclipse Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

@@ -1,0 +1,26 @@
+usePlugin 'groovy'
+
+group = 'org.gradle'
+version = '1.0'
+
+dependencies {
+    groovy 'org.codehaus.groovy:groovy-all:1.6.0'
+    compile project(':groovycDetector')
+    testCompile 'junit:junit:4.7'
+}
+
+compileJava {
+    exclude '**/ExcludeJava.java'
+}
+
+compileGroovy {
+    exclude '**/ExcludeGroovy.groovy', '**/ExcludeGroovyJava.java'
+    groovyOptions.fork(memoryMaximumSize: '128M')
+}
+
+manifest.mainAttributes(myprop: 'myvalue')
+metaInf << fileTree(dir: 'src/metaInfFiles')
+
+test {
+	useJUnit().options.systemProperties['org.gradle.integtest.buildDir'] = buildDir.absolutePath
+}

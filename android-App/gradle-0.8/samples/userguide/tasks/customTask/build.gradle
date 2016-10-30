@@ -1,0 +1,11 @@
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
+
+task hello(type: HelloTask)
+
+class HelloTask extends DefaultTask {
+    @TaskAction
+    def printGreeting() {
+        println 'hello from HelloTask'
+    }
+}

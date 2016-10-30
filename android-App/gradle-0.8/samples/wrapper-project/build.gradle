@@ -1,0 +1,15 @@
+
+createTask('wrapper', type: org.gradle.api.tasks.wrapper.Wrapper).configure {
+    gradleVersion = '0.8'
+    urlRoot = 'file:/Users/hans/gradle/build/distributions/'
+    zipBase = Wrapper.PathBase.PROJECT
+    zipPath = 'wrapper'
+    archiveBase = Wrapper.PathBase.PROJECT
+    archivePath = 'dist'
+    distributionBase = Wrapper.PathBase.PROJECT
+    distributionPath = 'dist'
+}
+
+createTask('hello') {
+    println 'hello'
+}

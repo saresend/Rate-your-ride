@@ -1,0 +1,149 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface"><link rel="next" href="project_and_task_api.html" title="Chapter&nbsp;12.&nbsp;The Project and Task API"></head><body><div class="navheader"><div><div class="navbar"><a href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface">Previous</a><span>|</span><a href="project_and_task_api.html" title="Chapter&nbsp;12.&nbsp;The Project and Task API">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="tutorial_this_and_that"></a>Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'</h1></div></div></div><div class="section" title="11.1.&nbsp;Directory creation"><div class="titlepage"><div><div><h2 class="title"><a name="sec:directory_creation"></a>11.1.&nbsp;Directory creation</h2></div></div></div><p>There is a common situation, that multiple tasks depend on the existence of a directory. Of course you can
+            deal with this by adding a
+            <code class="literal">mkdir</code>
+            to the beginning of those tasks. But this is kind of bloated. There is a better solution (works only if the
+            tasks that need the directory have a
+            <span class="emphasis"><em>dependsOn</em></span>
+            relationship):
+        </p><div class="example"><a name="makeDirectory"></a><p class="title"><b>Example&nbsp;11.1.&nbsp;Directory creation with mkdir</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">classesDir = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build/classes'</span>)
+task resources &lt;&lt; {
+    classesDir.mkdirs()
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+}
+task compile(dependsOn: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'resources'</span>) &lt;&lt; {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (classesDir.isDirectory()) {
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'The class directory exists. I can operate'</span>
+    }
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q compile</code></strong>
+        </p><pre class="screen">&gt; gradle -q compile
+The class directory exists. I can operate</pre></div></div><br class="example-break"><p>But Gradle offers you also <span class="emphasis"><em>Directory Tasks</em></span> to deal with this.</p><div class="example"><a name="directoryTask"></a><p class="title"><b>Example&nbsp;11.2.&nbsp;Directory creation with Directory tasks</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">classes = dir(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build/classes'</span>)
+task resources(dependsOn: classes) &lt;&lt; {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+}
+task otherResources(dependsOn: classes) &lt;&lt; {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">if</span> (classes.dir.isDirectory()) {
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'The class directory exists. I can operate'</span>
+    }
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// do something</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q otherResources</code></strong>
+        </p><pre class="screen">&gt; gradle -q otherResources
+The class directory exists. I can operate</pre></div></div><br class="example-break"><p>A <span class="emphasis"><em>Directory Task</em></span>
+            is a simple task whose name is a relative path to the project dir
+            <sup>[<a href="#ftn.N10896" name="N10896" class="footnote">6</a>]</sup>
+            . During the execution phase the directory corresponding to this path gets created if it does not exist yet.
+            Another interesting thing to note in this example, is that you can also pass tasks objects to the dependsOn
+            declaration of a task.
+        </p></div><div class="section" title="11.2.&nbsp;Gradle properties and system properties"><div class="titlepage"><div><div><h2 class="title"><a name="sec:gradle_properties_and_system_properties"></a>11.2.&nbsp;Gradle properties and system properties</h2></div></div></div><p>Gradle offers a variety of ways to add properties to your build. With the <code class="option">-D</code> command line
+            option you can pass a system property to the JVM which runs Gradle. The <code class="option">-D</code> option of the
+            <span class="command"><strong>gradle</strong></span> command has the same effect as the <code class="option">-D</code> option of the
+            <span class="command"><strong>java</strong></span> command.
+        </p><p>You can also directly add properties to your project objects using properties files. You can place a
+            <code class="filename">gradle.properties</code> file in the Gradle user home directory (defaults to
+            <code class="filename">
+          <em class="replaceable"><code>USER_HOME</code></em>/.gradle</code>) or in your project directory. For
+            multi-project builds you can place <code class="filename">gradle.properties</code> files in any subproject directory.
+            The properties of the <code class="filename">gradle.properties</code> can be accessed via the project object. The
+            properties file in the user's home directory has precedence over property files in the project directories.
+        </p><p>You can also add properties directly to your project object via the <code class="option">-P</code>
+            command line option. For more exotic use cases you can even pass properties <span class="emphasis"><em>directly</em></span>
+            to the project object via system and environment properties. For example if you run a build on a continuous
+            integration server where you have no admin rights for the <span class="emphasis"><em>machine</em></span>. Your build script
+            needs properties which values should not be seen by others. Therefore you can't use the <code class="option">-P</code>
+            option. In this case you can add an environment property in the project administration section (invisible to
+            normal users).
+            <sup>[<a href="#ftn.N108D4" name="N108D4" class="footnote">7</a>]</sup>
+            If the environment property follows the pattern
+            <code class="literal">ORG_GRADLE_PROJECT_<em class="replaceable"><code>propertyName</code></em>=somevalue</code>,
+            <code class="literal">propertyName</code> is added to your project object. If in the future CI servers support Gradle
+            directly, they might start Gradle via its main method. Therefore we already support the same mechanism for
+            system properties. The only difference is the pattern, which is
+            <code class="literal">org.gradle.project.<em class="replaceable"><code>propertyName</code></em>
+        </code>.
+        </p><p>With the <code class="filename">gradle.properties</code> files you can also set system properties. If a property
+            in such a file has the prefix <code class="literal">systemProp.</code> the property and its value are added to the 
+            system properties, without the prefix.
+        </p><div class="example"><a name="properties"></a><p class="title"><b>Example&nbsp;11.3.&nbsp;Setting properties with a gradle.properties file</b></p><div class="example-contents"><p>
+          <code class="filename">gradle.properties</code>
+        </p><pre class="programlisting">gradlePropertiesProp=gradlePropertiesValue
+systemPropertiesProp=shouldBeOverWrittenBySystemProp
+envPropertiesProp=shouldBeOverWrittenByEnvProp
+systemProp.system=systemValue</pre><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task printProps &lt;&lt; {
+    println commandLineProjectProp
+    println gradlePropertiesProp
+    println systemProjectProp
+    println envProjectProp
+    println System.properties[<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'system'</span>]
+}</pre><p>Output of <strong class="userinput"><code>gradle -q -PcommandLineProjectProp=commandLineProjectPropValue -Dorg.gradle.project.systemProjectProp=systemPropertyValue printProps</code></strong>
+        </p><pre class="screen">&gt; gradle -q -PcommandLineProjectProp=commandLineProjectPropValue -Dorg.gradle.project.systemProjectProp=systemPropertyValue printProps
+commandLineProjectPropValue
+gradlePropertiesValue
+systemPropertyValue
+envPropertyValue
+systemValue</pre></div></div><br class="example-break"><div class="section" title="11.2.1.&nbsp;Checking for project properties"><div class="titlepage"><div><div><h3 class="title"><a name="sub:checking_for_project_properties"></a>11.2.1.&nbsp;Checking for project properties</h3></div></div></div><p>You can access a project property in your build script simply by using its name as you would use a
+                variable. In case this property does not exists, an exception is thrown and the build fails. If your
+                build script relies on optional properties the user might set for example in a gradle.properties file,
+                you need to check for existence before you can access them. You can do this by using the method
+                <code class="literal">hasProperty('propertyName')</code>
+                which returns
+                <code class="literal">true</code>
+                or <code class="literal">false</code>.
+            </p></div></div><div class="section" title="11.3.&nbsp;Accessing the web via a proxy"><div class="titlepage"><div><div><h2 class="title"><a name="sec:accessing_the_web_via_a_proxy"></a>11.3.&nbsp;Accessing the web via a proxy</h2></div></div></div><p>Setting a proxy for web access (for example for downloading dependencies) is easy. Gradle does not need to
+            provide special functionality for this. The JVM can be instructed to go via proxy by setting certain system
+            properties. You could set these system properties directly in your build script with <code class="literal">
+                System.properties['proxy.proxyUser'] = 'userid'</code>. An arguably nicer way is shown in
+            <a class="xref" href="tutorial_this_and_that.html#sec:gradle_properties_and_system_properties" title="11.2.&nbsp;Gradle properties and system properties">Section&nbsp;11.2, &ldquo;Gradle properties and system properties&rdquo;</a>. Your gradle.properties file could look like
+            this:
+        </p><div class="example"><a name="N1092A"></a><p class="title"><b>Example&nbsp;11.4.&nbsp;Accessing the web via a proxy</b></p><div class="example-contents"><p>
+          <code class="filename">gradle.properties</code>
+        </p><pre class="programlisting">systemProp.http.proxyHost=www.somehost.org
+systemProp.http.proxyPort=8080
+systemProp.http.proxyUser=userid
+systemProp.http.proxyPassword=password
+systemProp.http.nonProxyHosts=*.nonproxyrepos.com|localhost</pre></div></div><br class="example-break"><p>We could not find a good overview for all possible proxy settings. One place to look are the constants
+            in a file from the ant project. Here a
+            <a class="ulink" href="http://svn.apache.org/viewvc/ant/core/trunk/src/main/org/apache/tools/ant/util/ProxySetup.java?view=markup&amp;pathrev=556977" target="_top">
+                link
+            </a> to the svn view. The other is a
+            <a class="ulink" href="http://java.sun.com/javase/6/docs/technotes/guides/net/properties.html" target="_top">
+                Networking Properties page
+            </a> from the JDK docs. If anyone knows a better overview please let us know via the mailing list.
+        </p></div><div class="section" title="11.4.&nbsp;Caching"><div class="titlepage"><div><div><h2 class="title"><a name="sec:caching"></a>11.4.&nbsp;Caching</h2></div></div></div><p>To improve the responsiveness Gradle caches the compiled build script by default. The first time you run a
+            build for a project, Gradle creates a
+            <code class="literal">.gradle</code>
+            directory in which it puts the compiled build script. The next time you run this build, Gradle uses the
+            compiled build script, if the timestamp of the compiled script is newer than the timestamp of the actual
+            build script. Otherwise the build script gets compiled and the new version is stored in the cache. If you
+            run Gradle with the
+            <code class="literal">-x</code>
+            option, any existing cache is ignored and the build script is compiled and executed on the fly. If you run
+            Gradle with the
+            <code class="literal">-r</code>
+            option, the build script is always compiled and stored in the cache. That way you can always rebuild the
+            cache if for example the timestamps for some reasons don't reflect that the build script needs to be
+            recompiled.
+        </p></div><div class="section" title="11.5.&nbsp;Configuring arbitrary objects"><div class="titlepage"><div><div><h2 class="title"><a name="sec:configuring_arbitrary_objects"></a>11.5.&nbsp;Configuring arbitrary objects</h2></div></div></div><p>You can configure arbitrary objects in the following very readable way.
+        </p><div class="example"><a name="configureObject"></a><p class="title"><b>Example&nbsp;11.5.&nbsp;Configuring arbitrary objects</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task configure &lt;&lt; {
+    pos = configure(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> java.text.FieldPosition(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">10</span>)) {
+        beginIndex = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">1</span>
+        endIndex = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">5</span>
+    }
+    println pos.beginIndex
+    println pos.endIndex
+}</pre><p>Output of <strong class="userinput"><code>gradle -q configure</code></strong>
+        </p><pre class="screen">&gt; gradle -q configure
+1
+5</pre></div></div><br class="example-break"></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N10896" name="ftn.N10896" class="para">6</a>] </sup>The notation <code class="literal">dir('/somepath')</code> is a convenience method for
+                    <code class="literal">tasks.add('somepath', type: Directory)</code>
+                </p></div><div class="footnote"><p><sup>[<a href="#N108D4" name="ftn.N108D4" class="para">7</a>] </sup>
+                    <span class="emphasis"><em>Teamcity</em></span> or <span class="emphasis"><em>Bamboo</em></span> are for example CI servers which
+                    offer this functionality.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface">Previous</a><span>|</span><a href="project_and_task_api.html" title="Chapter&nbsp;12.&nbsp;The Project and Task API">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

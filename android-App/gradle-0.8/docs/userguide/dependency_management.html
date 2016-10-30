@@ -1,0 +1,525 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;28.&nbsp;Dependency Management</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin"><link rel="next" href="artifact_management.html" title="Chapter&nbsp;29.&nbsp;Artifact Management"></head><body><div class="navheader"><div><div class="navbar"><a href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">Previous</a><span>|</span><a href="artifact_management.html" title="Chapter&nbsp;29.&nbsp;Artifact Management">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;28.&nbsp;Dependency Management"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="dependency_management"></a>Chapter&nbsp;28.&nbsp;Dependency Management</h1></div></div></div><div class="section" title="28.1.&nbsp;Introduction"><div class="titlepage"><div><div><h2 class="title"><a name="sec:Introduction"></a>28.1.&nbsp;Introduction</h2></div></div></div><p>This chapter gives an overview of issues related with dependency management and presents how Gradle can be used to overcome them.
+        </p><p>Gradle offers a very good support for dependency management. If you are familiar with Maven or Ivy approach you will be delighted to learn that:
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>All the concepts that you already know and like are still there and are fully supported by Gradle. The current dependency management solutions all require to work with XML descriptor files and are usually
+        based on remote repositories for downloading the dependencies. Gradle fully supports this approach.
+                </p></li><li class="listitem"><p>Gradle works <span class="emphasis"><em>perfectly</em></span> with your existent dependency management
+                    infrastructure, be it Maven or Ivy. All the repositories you have set up with your custom pom or
+                    ivy files can be used as they are. No changes necessary.
+                </p></li><li class="listitem"><p>Additionally, Gradle offers a simpler approach, which might be better suited for some projects.
+                </p></li></ul></div><p>
+        </p></div><div class="section" title="28.2.&nbsp;Dependency management overview"><div class="titlepage"><div><div><h2 class="title"><a name="sec:dependency_management_overview"></a>28.2.&nbsp;Dependency management overview</h2></div></div></div><p>We think dependency management is very important for almost any project. Yet the kind of dependency
+            management you need depends on the complexity and the environment of your project. Is your project a
+            distribution or a library? Is it part of an enterprise environment, where it is integrated into other
+            projects builds or not? But all types of projects share the following requirements:
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>The version of the jar must be easy to recognize. Sometimes the version is in the Manifest file of
+                    the jar, often not. And even if, it is rather painful to always look into the Manifest file to learn
+                    about the version. Therefore we think that you should only use jars which have their version as part
+                    of their file name.
+                </p></li><li class="listitem"><p>It hopes to be clear what are the first level dependencies and what are the transitive ones. There
+                    are different ways to achieve this. We will look at this later.
+                </p></li><li class="listitem"><p>Conflicting versions of the same jar should be detected and either resolved or cause an exception.
+                </p></li></ul></div><div class="section" title="28.2.1.&nbsp;Versioning the jar name"><div class="titlepage"><div><div><h3 class="title"><a name="sub:versioning_the_jar_name"></a>28.2.1.&nbsp;Versioning the jar name</h3></div></div></div><p>Why do we think this is necessary? Without a dependency management as described above, your are likely
+                to burn your fingers sooner or later. If it is unclear which version of a jar your are using, this can
+                introduce subtle bugs which are very hard to find. For example there might be a project which uses
+                Hibernate 3.0.4. There are some problems with Hibernate so a developer installs version 3.0.5 of
+                Hibernate on her machine. This did not solve the problem but she forgot to roll back Hibernate to 3.0.4.
+                Weeks later there is an exception on the integration machine which can't be reproduced on the developer
+                machine. Without a version in the jar name this problem might take a long time to debug. Version in the
+                jar names increases the expressiveness of your project and makes it easier to maintain.
+            </p></div><div class="section" title="28.2.2.&nbsp;Transitive dependency management"><div class="titlepage"><div><div><h3 class="title"><a name="sub:transitive_dependency_management"></a>28.2.2.&nbsp;Transitive dependency management</h3></div></div></div><p>Why is transitive dependency management so important? If you don't know which dependencies are first
+                level dependencies and which ones are transitive you will soon lose control over your build. Even
+                Gradle has already 20+ jars. An enterprise project using Spring, Hibernate, etc. easily ends up with
+                100+ jars. There is no way to memorize where all these jars come from. If you want to get rid of a first
+                level dependency you can't be sure which other jars you should remove. Because a dependency of a
+                first level dependency might also be a first level dependency itself. Or it might be a transitive
+                dependency of another of your first level dependencies. Many first level dependencies are runtime
+                dependencies and the transitive dependencies are of course all runtime dependencies. So the compiler
+                won't help you much here. The end of the story is, as we have seen very often, no one dares to remove
+                any jar any longer. The project classpath is a complete mess and if a classpath problem arises, hell on
+                earth invites you for a ride. In one of my former projects, I found some ldap related jar in the
+                classpath, whose sheer presence, as I found out after much research, accelerated LDAP access. So
+                removing this jar would not have led to any errors at compile or runtime.
+            </p><p>Gradle offers you different ways to express what are first level and what are transitive dependencies.
+                Gradle allows you for example to store your jars in CVS or SVN without XML descriptor files and still
+                use transitive dependency management. Gradle also validates your dependency hierarchy against the
+                reality of your code by using only the first level dependencies for compiling.
+            </p></div><div class="section" title="28.2.3.&nbsp;Version conflicts"><div class="titlepage"><div><div><h3 class="title"><a name="sub:version_conflicts"></a>28.2.3.&nbsp;Version conflicts</h3></div></div></div><p>In your dependency description you tell Gradle which version of a dependency is needed by another
+                dependency. This frequently leads to conflicts. Different dependencies rely on different versions of
+                another dependency. The JVM unfortunately does not offer yet any easy way, to have different versions of
+                the same jar in the classpath (see <a class="xref" href="dependency_management.html#sub:dependency_management_and_java" title="28.2.4.&nbsp;Dependency management and Java">Section&nbsp;28.2.4, &ldquo;Dependency management and Java&rdquo;</a>). What Gradle
+                offers you is a resolution strategy, by default the newest version is used. To deal with problems due to
+                version conflicts, reports with dependency graphs are also very helpful. Such reports are another
+                feature of dependency management.
+            </p></div><div class="section" title="28.2.4.&nbsp;Dependency management and Java"><div class="titlepage"><div><div><h3 class="title"><a name="sub:dependency_management_and_java"></a>28.2.4.&nbsp;Dependency management and Java</h3></div></div></div><p>Traditionally, Java has offered no support at all for dealing with libraries and versions. There are
+                no standard ways to say that
+                <code class="literal">foo-1.0.jar</code>
+                depends on a <code class="literal">bar-2.0.jar</code>. This has led to proprietary solutions. The most popular ones
+                are Maven and Ivy. Maven is a complete build system whereas Ivy focuses solely on dependency management.
+            </p><p>Both approaches rely on descriptor XML files, which contains information about the dependencies of a
+                particular jar. Both also use repositories where the actual jars are placed together with their
+                descriptor files. And both offer resolution for conflicting jar versions in one form or the other. Yet
+                we think the differences of both approaches are significant
+                in terms of flexibility and maintainability. Beside this, Ivy fully supports the Maven dependency
+                handling. So with Ivy you have access to both worlds. We like Ivy very much. Gradle uses it under the
+                hood for its dependency management. Ivy is most often used via Ant and XML descriptors. But it also has
+                an API. We integrate deeply with Ivy via its API. This enables us to build new concepts on top
+                of Ivy which Ivy does not offer itself.
+            </p><p>Right now there is a lot of movement in the field of dependency handling. There is OSGi and there is
+                JSR-294.
+                <sup>[<a href="#ftn.N12BD0" name="N12BD0" class="footnote">19</a>]</sup>
+                OSGi is available already, JSR-294 is supposed to be shipped with Java 7. These technologies
+                deal, amongst many other things, also with a painful problem which is neither solved by Maven nor by Ivy. This is enabling different
+                versions of the same jar to be used at runtime.
+            </p></div></div><div class="section" title="28.3.&nbsp;How to declare your dependencies"><div class="titlepage"><div><div><h2 class="title"><a name="sec:how_to_declare_your_dependencies"></a>28.3.&nbsp;How to declare your dependencies</h2></div></div></div><p>People who know Ivy have come across most of the concepts we are going to introduce now. But Gradle does not
+            use any XML for declaring the dependencies (e.g. no <code class="literal">ivy.xml</code> file). It has its own
+            notation which is part of the Gradle build file.
+        </p><div class="section" title="28.3.1.&nbsp;Configurations"><div class="titlepage"><div><div><h3 class="title"><a name="sub:configurations"></a>28.3.1.&nbsp;Configurations</h3></div></div></div><p>Dependencies are grouped in configurations. Configurations have a name, a number of other properties,
+                and they can extend each other. For examples see: <a class="xref" href="artifact_dependencies_tutorial.html#sec:artifact_configurations" title="8.1.&nbsp;Artifact configurations">Section&nbsp;8.1, &ldquo;Artifact configurations&rdquo;</a>.
+                If you use the Java plugin, Gradle adds a number of pre-defined configurations to your build. The
+                plugin also assigns configurations to tasks. See <a class="xref" href="java_plugin.html#sec:java_plugin_and_dependency_management" title="18.4.&nbsp;Dependency management">Section&nbsp;18.4, &ldquo;Dependency management&rdquo;</a>
+                for details. Of course you can add your add custom configurations on top of that. There are many use cases
+                for custom configurations. This is very handy for example for adding dependencies not needed for
+                building or testing your software (e.g. additional JDBC drivers to be shipped with your distribution).
+                The configurations are managed by a <code class="literal">configurations</code> object. The closure you pass to
+                the configurations object is applied against its API. To learn more about this API have a look at
+                <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/dsl/ConfigurationHandler.html" target="_top">
+            <code class="classname">ConfigurationHandler</code>
+          </a>.
+            </p></div><div class="section" title="28.3.2.&nbsp;Module dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:module_dependencies"></a>28.3.2.&nbsp;Module dependencies</h3></div></div></div><p>Module dependencies are the most common dependencies. They correspond to a dependency in an external
+                repository.
+            </p><div class="example"><a name="moduleDependencies"></a><p class="title"><b>Example&nbsp;28.1.&nbsp;Module dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    runtime group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.springframework'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spring-core'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'2.5'</span>
+    runtime <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.springframework:spring-core:2.5'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.springframework:spring-aop:2.5'</span>
+    runtime(
+        [group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.springframework'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spring-core'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'2.5'</span>],
+        [group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.springframework'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spring-aop'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'2.5'</span>]
+    )
+    runtime(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.hibernate:hibernate:3.0.5'</span>) {
+        transitive = true
+    }
+    runtime group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.hibernate'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hibernate'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'3.0.5'</span>, transitive: true
+    runtime(group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.hibernate'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hibernate'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'3.0.5'</span>) {
+        transitive = true
+    }
+}</pre></div></div><br class="example-break"><p>Gradle provides different notations for module dependencies. There is a string notation and
+                a map notation. A module dependency has an API which allows for further configuration. Have a look at
+                <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/ExternalModuleDependency.html" target="_top">
+            <code class="classname">ExternalModuleDependency</code>
+          </a> to learn all about the API.
+                This API provides properties and configuration methods. Via the string notation you can define a subset
+                the properties. With the map notation you can define all properties. To have access to the complete API,
+                either with the map or with the string notation, you can assign a single dependency to a configuration
+                together with a closure.
+            </p><p>If you declare a module dependency, Gradle looks for a corresponding module descriptor file (<code class="literal">pom.xml</code> or
+                <code class="literal">ivy.xml</code>) in the repositories. If such a module descriptor file exists, it is parsed and the artifacts of
+                this module (e.g. <code class="literal">hibernate-3.0.5.jar</code>) as well as its dependencies (e.g. cglib) are downloaded. If no such
+                module descriptor file exists, Gradle looks for a file called <code class="literal">hibernate-3.0.5.jar</code> to retrieve. In Maven
+                a module can only have one and only one artifact. In Gradle and Ivy a module can have multiple artifacts.
+                Each artifact can have a different set of dependencies.
+            </p><div class="section" title="28.3.2.1.&nbsp;Artifact only notation"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:artifact_dependencies"></a>28.3.2.1.&nbsp;Artifact only notation</h4></div></div></div><p>As said above, if no module descriptor file can be found, Gradle by default
+                    downloads a jar with the name of the module. But sometimes, even if the repository contains module descriptors,  you want to download only the artifact jar, without
+                    the dependencies.
+                    <sup>[<a href="#ftn.N12C25" name="N12C25" class="footnote">20</a>]</sup>
+                    And sometimes you want to download a zip from a repository, that does not have module descriptors.
+                    Gradle provides an <span class="emphasis"><em>artifact only</em></span> notation for those use cases - simply prefix the extension that you want to be downloaded with <code class="literal">'@'</code> sign:
+                    </p><div class="example"><a name="artifactOnly"></a><p class="title"><b>Example&nbsp;28.2.&nbsp;Artifact only notation</b></p><div class="example-contents"><p>
+                <code class="filename">build.gradle</code>
+              </p><pre class="programlisting">dependencies {
+    runtime <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.groovy:groovy:1.5.6@jar"</span>
+    runtime group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.groovy'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'groovy'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.5.6'</span>, ext: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'jar'</span>
+}</pre></div></div><p><br class="example-break">
+                    An artifact only notation creates a module dependency which downloads only the artifact file with
+                    the specified extension. Existing module descriptors are ignored.
+                </p></div><div class="section" title="28.3.2.2.&nbsp;Classifiers"><div class="titlepage"><div><div><h4 class="title"><a name="ssub:classifiers"></a>28.3.2.2.&nbsp;Classifiers</h4></div></div></div><p>The Maven dependency management has the notion of classifiers.
+                    <sup>[<a href="#ftn.N12C45" name="N12C45" class="footnote">21</a>]</sup>
+                    Gradle supports this. To retrieve classified dependencies from a maven repository you can write:
+                </p><div class="example"><a name="classifier"></a><p class="title"><b>Example&nbsp;28.3.&nbsp;Dependency with classifier</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">compile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.gradle.test.classifiers:service:1.0:jdk15@jar"</span>
+    otherConf group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.test.classifiers'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'service'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>, classifier: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'jdk14'</span></pre></div></div><br class="example-break"><p>As you can see in the example, classifiers can be used together with setting
+                an explicit extension (artifact only notation).</p></div></div><div class="section" title="28.3.3.&nbsp;Client module dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:client_module_dependencies"></a>28.3.3.&nbsp;Client module dependencies</h3></div></div></div><p>Client module dependencies enable you to declare <span class="emphasis"><em>transitive</em></span>
+                dependencies directly in your build script. They are a replacement for a module descriptor XML file in
+                an external repository.
+            </p><div class="example"><a name="client-modules"></a><p class="title"><b>Example&nbsp;28.4.&nbsp;Client module dependencies - transitive dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    runtime module(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.codehaus.groovy:groovy-all:1.5.6"</span>) {
+        dependency(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"commons-cli:commons-cli:1.0"</span>) {
+            transitive = false
+        }
+        module(group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.apache.ant'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'ant'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.7.0'</span>) {
+            dependencies <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.apache.ant:ant-launcher:1.7.0@jar"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.apache.ant:ant-junit:1.7.0"</span>
+        }
+    }
+}</pre></div></div><br class="example-break"><p>This declares a dependency of your project on Groovy. Groovy itself has dependencies. But Gradle does
+                not look for an XML descriptor to figure them out but gets the information from the build file. The
+                dependencies of a client module can be normal module dependencies or artifact dependencies or another
+                client module. Have also a look at the javadoc: <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/ClientModule.html" target="_top">
+            <code class="classname">ClientModule</code>
+          </a>
+            </p><p>In the current release client modules have one limitation. Let's say your project is a library and
+                you want this library to be uploaded to your company's Maven or Ivy repository. Gradle uploads the
+                jars of your project to the company repository together with the XML descriptor file of the dependencies.
+                If you use client modules the dependency declaration in the XML descriptor file is not correct. We will
+                improve this in a future release of Gradle.
+            </p></div><div class="section" title="28.3.4.&nbsp;Project dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:project_dependencies"></a>28.3.4.&nbsp;Project dependencies</h3></div></div></div><p>Gradle distinguishes between external dependencies and dependencies on projects which are part of the
+                same multi-project build. For the latter you can declare <em class="firstterm">Project Dependencies</em>.
+            </p><div class="example"><a name="project-dependencies"></a><p class="title"><b>Example&nbsp;28.5.&nbsp;Project dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    compile project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':shared'</span>)
+}</pre></div></div><br class="example-break"><p>For more information see the javadoc for <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/ProjectDependency.html" target="_top">
+            <code class="classname">ProjectDependency</code>
+          </a>
+            </p><p>Multi-project builds are discussed in <a class="xref" href="multi_project_builds.html" title="Chapter&nbsp;31.&nbsp;Multi-project Builds">Chapter&nbsp;31, <i>Multi-project Builds</i></a>.
+            </p><p>Transitive compile dependencies are disabled by default. They can be enabled using:
+            </p><pre class="programlisting">configurations.compile.transitive = true</pre></div><div class="section" title="28.3.5.&nbsp;File dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="N12CA1"></a>28.3.5.&nbsp;File dependencies</h3></div></div></div><p>File dependencies allow you to directly add a set of files to a configuration, without first adding
+                them to a repository. This can be useful if you cannot, or do not want to, place certain files in a
+                repository. Or if you do not want to use any repositories at all for storing your dependencies.
+            </p><p>To add some files as a dependency for a configuration, you simply pass a
+                <a class="link" href="working_with_files.html#sec:file_collections" title="14.2.&nbsp;File collections">file collection</a> as a dependency:</p><div class="example"><a name="file-dependencies"></a><p class="title"><b>Example&nbsp;28.6.&nbsp;File dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    runtime files(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'libs/a.jar'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'libs/b.jar'</span>)
+    runtime fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'libs'</span>, includes: [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'*.jar'</span>])
+}</pre></div></div><br class="example-break"><p>File dependencies are not included in the published dependency descriptor for your project.
+                However, file dependencies are included in transitive project dependencies within the same build.
+                This means they cannot be used outside the current build, but they can be used with the same build.
+            </p><p>
+                You can declare which tasks produce the files for a file dependency. You might do this when, for example,
+                the files are generated by the build.
+            </p><div class="example"><a name="generatedFileDependencies"></a><p class="title"><b>Example&nbsp;28.7.&nbsp;Generated file dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    compile files(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$buildDir/classes"</span>) {
+        builtBy <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compile'</span>
+    }
+}
+
+task compile &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compiling classes'</span>
+}
+
+task list(dependsOn: configurations.compile) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"classpath = ${configurations.compile.collect {File file -&gt; file.name}}"</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q list</code></strong>
+          </p><pre class="screen">&gt; gradle -q list
+compiling classes
+classpath = [classes]</pre></div></div><br class="example-break"></div><div class="section" title="28.3.6.&nbsp;Excluding transitive dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:exclude_transitive_dependencies"></a>28.3.6.&nbsp;Excluding transitive dependencies</h3></div></div></div><p>You can exclude a <span class="emphasis"><em>transitive</em></span> dependency either by configuration or by dependency:
+            </p><div class="example"><a name="exclude-dependencies"></a><p class="title"><b>Example&nbsp;28.8.&nbsp;Excluding transitive dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">configurations {
+    compile.exclude module: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'commons'</span>
+    all*.exclude group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle.test.excludes'</span>, module: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'reports'</span>
+}
+
+dependencies {
+    compile(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.gradle.test.excludes:api:1.0"</span>) {
+        exclude module: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'shared'</span>
+    }
+}</pre></div></div><br class="example-break"><p>If you define
+                an exclude for a particular configuration, the excluded transitive dependency will be filtered for all
+                dependencies when resolving this configuration or any inheriting configuration.
+                If you want to exclude a transitive dependency from all your
+                configurations you can use the Groovy spread-dot operator to express this in a concise way, as shown in the example.
+                When defining an exclude, you can
+                specify either only the organization or only the module name or both.
+                Have also a look at the javadoc of <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/Dependency.html" target="_top">
+            <code class="classname">Dependency</code>
+          </a> and
+                <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/Configuration.html" target="_top">
+            <code class="classname">Configuration</code>
+          </a>.
+            </p></div><div class="section" title="28.3.7.&nbsp;Optional attributes"><div class="titlepage"><div><div><h3 class="title"><a name="N12CF4"></a>28.3.7.&nbsp;Optional attributes</h3></div></div></div><p><a name="para:dependencies_with_empty_attributes"></a>All attributes for a dependency are optional, except the name. It depends on the repository type,
+                which information is need for actually finding the dependencies in the repository.
+                See <a class="xref" href="dependency_management.html#sec:repositories" title="28.5.&nbsp;Repositories">Section&nbsp;28.5, &ldquo;Repositories&rdquo;</a>. If you work for example with Maven repositories, you need to define the
+                group, name and version. If you work with filesystem repositories you might only need the name or the name
+                and the version.
+            </p><div class="example"><a name="dependenciesWithEmptyAttributes"></a><p class="title"><b>Example&nbsp;28.9.&nbsp;Optional attributes of dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    runtime <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":junit:4.4"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":testng"</span>
+    runtime name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'testng'</span> 
+}</pre></div></div><br class="example-break"><p><a name="para:notation_collections"></a>You can also assign collections or arrays of dependency notations to a configuration:
+            </p><div class="example"><a name="listGrouping"></a><p class="title"><b>Example&nbsp;28.10.&nbsp;Collections and arrays of dependencies</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">List groovy = [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.codehaus.groovy:groovy-all:1.5.4@jar"</span>,
+               <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"commons-cli:commons-cli:1.0@jar"</span>,
+               <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.apache.ant:ant:1.7.0@jar"</span>]
+List hibernate = [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.hibernate:hibernate:3.0.5@jar'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'somegroup:someorg:1.0@jar'</span>]
+dependencies {
+    runtime groovy, hibernate
+}</pre></div></div><br class="example-break"></div><div class="section" title="28.3.8.&nbsp;Dependency configurations"><div class="titlepage"><div><div><h3 class="title"><a name="sec:dependency_configurations"></a>28.3.8.&nbsp;Dependency configurations</h3></div></div></div><p>In Gradle a dependency can have different configurations (as your project can have different configurations). If you
+            don't specify anything explicitly, Gradle uses the default configuration of the dependency. For dependencies
+            from a Maven repository, the default configuration is the only available one anyway. If you work with Ivy repositories and
+            want to declare a non-default configuration for your dependency you have to use the map notation and declare:
+            </p><div class="example"><a name="dependencyConfigurations"></a><p class="title"><b>Example&nbsp;28.11.&nbsp;Dependency configurations</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    runtime group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.somegroup'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'somedependency'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>, configuration: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'someConfiguration'</span>
+}</pre></div></div><br class="example-break"><p>To do the same for project dependencies you need to declare:</p><div class="example"><a name="dependencyConfigurationsProjects"></a><p class="title"><b>Example&nbsp;28.12.&nbsp;Dependency configurations for project</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">dependencies {
+    compile project(path: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">':api'</span>, configuration: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'spi'</span>)
+}</pre></div></div><br class="example-break"></div><div class="section" title="28.3.9.&nbsp;Dependency reports"><div class="titlepage"><div><div><h3 class="title"><a name="N12D38"></a>28.3.9.&nbsp;Dependency reports</h3></div></div></div><p>You can generate dependency reports from the command line (see <a class="xref" href="tutorial_gradle_command_line.html#para:commandline_dependency_report">Section&nbsp;9.5, &ldquo;Obtaining information about your build&rdquo;</a>).
+                With the help of the Project report plugin (see <a class="xref" href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">Chapter&nbsp;27, <i>The Project Report Plugin</i></a>) such a report can be created by your build.
+            </p></div></div><div class="section" title="28.4.&nbsp;Working with dependencies"><div class="titlepage"><div><div><h2 class="title"><a name="N12D43"></a>28.4.&nbsp;Working with dependencies</h2></div></div></div><p>For the examples below we have the following dependencies setup:</p><div class="example"><a name="configurationHandlingSetup"></a><p class="title"><b>Example&nbsp;28.13.&nbsp;Configuration.copy</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">configurations {
+    sealife
+    alllife.extendsFrom sealife
+}
+
+dependencies {
+    sealife <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"sea.mammals:orca:1.0"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"sea.fish:shark:1.0"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"sea.fish:tuna:1.0"</span>
+    alllife <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"air.birds:albatros:1.0"</span>
+}</pre></div></div><br class="example-break"><p>The dependencies have the following transitive dependencies:</p><p>shark-1.0 -&gt; seal-2.0, tuna-1.0</p><p>orca-1.0 -&gt; seal-1.0</p><p>tuna-1.0 -&gt; herring-1.0</p><p>You can use the configuration to access the declared dependencies or a subset of those:
+        </p><div class="example"><a name="configurationHandlingDependencies"></a><p class="title"><b>Example&nbsp;28.14.&nbsp;Accessing declared dependencies</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task dependencies &lt;&lt; {
+    configurations.alllife.dependencies.each { dep -&gt; println dep.name }
+    println()
+    configurations.alllife.allDependencies.each { dep -&gt; println dep.name }
+    println()
+    configurations.alllife.allDependencies.findAll { dep -&gt; dep.name != <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'orca'</span> }.each { dep -&gt; println dep.name }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q dependencies</code></strong>
+        </p><pre class="screen">&gt; gradle -q dependencies
+albatros
+
+albatros
+orca
+shark
+tuna
+
+albatros
+shark
+tuna</pre></div></div><br class="example-break"><p>
+        <code class="code">dependencies</code> returns only the dependencies belonging explicitly to the configuration.
+            <code class="code">allDependencies</code> includes the dependencies from extended
+            configurations.
+        </p><p>To get the library files of the configuration dependencies you can do:
+        </p><div class="example"><a name="configurationHandlingAllFiles"></a><p class="title"><b>Example&nbsp;28.15.&nbsp;Configuration.files</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task allFiles &lt;&lt; {
+    configurations.sealife.files.each { file -&gt;
+        println file.name
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q allFiles</code></strong>
+        </p><pre class="screen">&gt; gradle -q allFiles
+orca-1.0.jar
+shark-1.0.jar
+seal-2.0.jar
+tuna-1.0.jar
+herring-1.0.jar</pre></div></div><br class="example-break"><p>Sometimes you want the library files of a subset of the configuration dependencies (e.g. of a single dependency).
+        </p><div class="example"><a name="configurationHandlingFiles"></a><p class="title"><b>Example&nbsp;28.16.&nbsp;Configuration.files with spec</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task files &lt;&lt; {
+    configurations.sealife.files { dep -&gt; dep.name == <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'orca'</span> }.each { file -&gt;
+        println file.name
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q files</code></strong>
+        </p><pre class="screen">&gt; gradle -q files
+orca-1.0.jar
+seal-2.0.jar</pre></div></div><br class="example-break"><p>The <code class="code">Configuration.files</code> method always retrieves all artifacts of the <span class="emphasis"><em>whole</em></span> configuration. It
+        then filters the retrieved files by specified dpendencies. As you can see in the example, transitive dependencies are included.
+        </p><p>You can also copy a configuration. You can optionally specify that only a subset of dependencies from the orginal configuration
+            should be copied. The copying methods come in two flavors. The <code class="code">copy</code> method copies only the dependencies belonging
+            explicitly to the configuration. The <code class="code">copyRecursive</code> methode copies all the dependencies, including the dependencies from extended
+            configurations.
+        </p><div class="example"><a name="configurationHandlingCopy"></a><p class="title"><b>Example&nbsp;28.17.&nbsp;Configuration.copy</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task copy &lt;&lt; {
+    configurations.alllife.copyRecursive { dep -&gt; dep.name != <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'orca'</span> }.allDependencies.each { dep -&gt;
+        println dep.name
+    }
+    println()
+    configurations.alllife.copy().allDependencies.each { dep -&gt;
+        println dep.name
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q copy</code></strong>
+        </p><pre class="screen">&gt; gradle -q copy
+albatros
+shark
+tuna
+
+albatros</pre></div></div><br class="example-break"><p>It is important to note that the returned files of the copied configuration
+            are often but not always the same than the returned files of the dependency subset of the original configuration.
+            In case of version conflicts between
+            dependencies of the subset and dependencies not belonging to the subset the resolve result might be different.</p><div class="example"><a name="configurationHandlingCopyVsFiles"></a><p class="title"><b>Example&nbsp;28.18.&nbsp;Configuration.copy vs. Configuration.files</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task copyVsFiles &lt;&lt; {
+    configurations.sealife.copyRecursive { dep -&gt; dep.name == <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'orca'</span> }.each { file -&gt;
+        println file.name
+    }
+    println()
+    configurations.sealife.files { dep -&gt; dep.name == <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'orca'</span> }.each { file -&gt;
+        println file.name
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q copyVsFiles</code></strong>
+        </p><pre class="screen">&gt; gradle -q copyVsFiles
+orca-1.0.jar
+seal-1.0.jar
+
+orca-1.0.jar
+seal-2.0.jar</pre></div></div><br class="example-break"><p>In the example above, <code class="code">orca</code> has a dependency on <code class="code">seal-1.0</code> whereas
+            <code class="code">shark</code> has a dependency on <code class="code">seal-2.0</code>. The original configuration has therefore a version
+            conflict which is resolved to the newer <code class="code">seal-2.0</code> version. The <code class="code">files</code> method therefore
+            returns <code class="code">seal-2.0</code> as a transitive dependency of <code class="code">orca</code>. The copied configuration only has <code class="code">orca</code>
+            as a dependency and therefore there is no version conflict and <code class="code">seal-1.0</code> is returned as a transitive
+            dependency.
+        </p><p>Once a configuration is resolved it is immutable. Changing its state or the state of one of its dependencies
+            will cause an exception. You can always copy a resolved configuration. The copied configuration is in the unresolved
+            state and can be freshly resolved.
+        </p><p>To learn more about the API of the configuration class see the javadoc:
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/Configuration.html" target="_top">
+          <code class="classname">Configuration</code>
+        </a>.
+        </p></div><div class="section" title="28.5.&nbsp;Repositories"><div class="titlepage"><div><div><h2 class="title"><a name="sec:repositories"></a>28.5.&nbsp;Repositories</h2></div></div></div><div class="section" title="28.5.1.&nbsp;Introduction"><div class="titlepage"><div><div><h3 class="title"><a name="sub:introduction"></a>28.5.1.&nbsp;Introduction</h3></div></div></div><p>The Gradle repository management, based on Apache Ivy, gives you have a lot of freedom
+                regarding the repository layout and the retrieval policies. Additionally Gradle provides a couple of convenience
+                method to add preconfigured repositories.
+            </p></div><div class="section" title="28.5.2.&nbsp;Maven repositories"><div class="titlepage"><div><div><h3 class="title"><a name="sub:maven_repo"></a>28.5.2.&nbsp;Maven repositories</h3></div></div></div><p>To add the central Maven2 repository (<a class="ulink" href="http://repo1.maven.org/maven2" target="_top">http://repo1.maven.org/maven2</a>) simply
+                type:
+            </p><div class="example"><a name="mavenCentral"></a><p class="title"><b>Example&nbsp;28.19.&nbsp;Adding central Maven repository</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    mavenCentral()
+}</pre></div></div><br class="example-break"><p>Now Gradle looks for your dependencies in this repository.
+            </p><p>Quite often certain jars are not in the official Maven repository for licensing reasons (e.g. JTA),
+                but its poms are.
+            </p><div class="example"><a name="mavenCentralJarRepo"></a><p class="title"><b>Example&nbsp;28.20.&nbsp;Adding many Maven repositories</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    mavenCentral name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'single-jar-repo'</span>, urls: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com/jars"</span>
+    mavenCentral name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'multi-jar-repos'</span>, urls: [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com/jars1"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com/jars2"</span>]
+}</pre></div></div><br class="example-break"><p>Gradle looks first in the central Maven repository for the pom and the jar. If the jar can't be
+                found there, its looks for it in the other repositories.
+            </p><p>For adding a custom Maven repository you can say:
+            </p><div class="example"><a name="mavenLikeRepo"></a><p class="title"><b>Example&nbsp;28.21.&nbsp;Adding custom Maven repository</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    mavenRepo urls: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com/maven2"</span>
+}</pre></div></div><br class="example-break"><p>To declare additional repositories to look for jars (like above in the example
+                for the central Maven repository), you can say:
+            </p><div class="example"><a name="mavenLikeRepoWithJarRepo"></a><p class="title"><b>Example&nbsp;28.22.&nbsp;Adding additional Maven repositories for JAR files</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    mavenRepo urls: [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo2.mycompany.com/maven2"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com/jars"</span>]
+}</pre></div></div><br class="example-break"><p>The first URL is used to look for poms and jars. The subsequent URLs are used to look for jars.
+            </p><div class="section" title="28.5.2.1.&nbsp;Accessing password protected Maven repositories"><div class="titlepage"><div><div><h4 class="title"><a name="N12E55"></a>28.5.2.1.&nbsp;Accessing password protected Maven repositories</h4></div></div></div><p>To access a password protected Maven repository (basic authentication) you need to use one of Ivy features:</p><div class="example"><a name="mavenPasswordProtectedRepo"></a><p class="title"><b>Example&nbsp;28.23.&nbsp;Accessing password protected Maven repository</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">org.apache.ivy.util.url.CredentialsStore.INSTANCE.addCredentials(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"REALM"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"HOST"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"USER"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"PASSWORD"</span>);</pre></div></div><br class="example-break"><p>Host name should not include <code class="literal">"http://"</code> prefix. It is advisable to keep your login and password in <code class="filename">gradle.properties</code> rather than directly in the build file.</p></div></div><div class="section" title="28.5.3.&nbsp;Flat directory resolver"><div class="titlepage"><div><div><h3 class="title"><a name="sec:flat_dir_resolver"></a>28.5.3.&nbsp;Flat directory resolver</h3></div></div></div><p>If you want to use a (flat) filesytem directory as a repository, simply type:
+            </p><div class="example"><a name="flatDirMulti"></a><p class="title"><b>Example&nbsp;28.24.&nbsp;Flat repository resolver</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    flatDir name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localRepository'</span>, dirs: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib'</span>
+    flatDir dirs: [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib1'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib2'</span>]
+}</pre></div></div><br class="example-break"><p>This adds repositories which look into one or more directories for finding dependencies. If you only
+                work with flat directory resolvers you don't need to set all attributes of a dependency.
+                See <a class="xref" href="dependency_management.html#para:dependencies_with_empty_attributes">Section&nbsp;28.3.7, &ldquo;Optional attributes&rdquo;</a>
+            </p></div><div class="section" title="28.5.4.&nbsp;More about preconfigured repositories"><div class="titlepage"><div><div><h3 class="title"><a name="N12E85"></a>28.5.4.&nbsp;More about preconfigured repositories</h3></div></div></div><p>The methods above for creating preconfigured repositories share some common behavior. For all of them, defining
+                a name for the repository is optional. If no name is defined a default name is calculated, depending on the
+                type of the repository. You might want to assign a name, if you want to access the declared repository. For example
+                if you want to use it also for uploading your project artifacts. An explicit name might also be helpful when
+                studying the debug output.
+            </p><p>The values passed as arguments to the repository methods can be of any type, not just String. The value
+                that is actually used, is the <code class="code">toString</code> result of the argument object.
+            </p></div><div class="section" title="28.5.5.&nbsp;Cache"><div class="titlepage"><div><div><h3 class="title"><a name="sub:cache"></a>28.5.5.&nbsp;Cache</h3></div></div></div><p>When Gradle downloads dependencies from remote repositories it stores them in a local cache located at
+                <code class="literal">USER_HOME/.gradle/cache</code>. When Gradle downloads dependencies from one of its
+                predefined local resolvers (e.g. Flat Directory resolver), the cache is not used as an intermediate
+                storage for dependency artifacts. The cache is always used for caching module descriptors.
+            </p></div><div class="section" title="28.5.6.&nbsp;More about Ivy resolvers"><div class="titlepage"><div><div><h3 class="title"><a name="sub:more_about_ivy_resolvers"></a>28.5.6.&nbsp;More about Ivy resolvers</h3></div></div></div><p>Gradle, thanks to Ivy under its hood, is extremely flexible regarding repositories:
+            </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>There are many options for the protocol to communicate with the repository (e.g. filesystem,
+                        http, ssh, ...)
+                    </p></li><li class="listitem"><p>Each repository can have its own layout.
+                    </p></li></ul></div><p>Let's say, you declare a dependency on the
+                <code class="literal">junit:junit:3.8.2</code> library.
+                Now how does Gradle find it in the repositories? Somehow the dependency information has to be mapped to a
+                path. In contrast to Maven, where this path is fixed, with Gradle you can define a pattern that defines
+                what the path will look like. Here are some examples:
+                <sup>[<a href="#ftn.N12EAA" name="N12EAA" class="footnote">22</a>]</sup>
+            </p><pre class="programlisting">// Maven2 layout (if a repository is marked as Maven2 compatible, the organization (group) is split into subfolders according to the dots.)
+someroot/[organisation]/[module]/[revision]/[module]-[revision].[ext]
+
+// Typical layout for an ivy repository (the organization is not split into subfolder)
+someroot/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]
+
+// Simple layout (the organization is not used, no nested folders.)
+someroot/[artifact]-[revision].[ext]</pre><p>To add any kind of repository (you can pretty easy write your own ones) you can do:
+            </p><div class="example"><a name="fileSystemResolver"></a><p class="title"><b>Example&nbsp;28.25.&nbsp;Definition of a custom repository</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">repositories {
+    add(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> org.apache.ivy.plugins.resolver.FileSystemResolver()) {
+        name = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'repo'</span>
+        addIvyPattern <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$projectDir/repo/[organisation]/[module]-ivy-[revision].xml"</span>
+        addArtifactPattern <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$projectDir/repo/[organisation]/[module]-[revision](-[classifier]).[ext]"</span>
+        descriptor = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'optional'</span>
+        checkmodified = true
+    }
+}</pre></div></div><br class="example-break"><p>An overview of which Resolvers are offered by Ivy and thus also by Gradle can be found
+                <a class="ulink" href="http://ant.apache.org/ivy/history/latest-milestone/settings/resolvers.html" target="_top">here</a>. With
+                Gradle you just don't configure them via XML but directly via their API.
+            </p></div></div><div class="section" title="28.6.&nbsp;Strategies for transitive dependency management"><div class="titlepage"><div><div><h2 class="title"><a name="sec:strategies_of_transitive_dependency_management"></a>28.6.&nbsp;Strategies for transitive dependency management</h2></div></div></div><p>Many projects rely on the <a class="ulink" href="http://repo1.maven.org/maven2" target="_top">Maven2 repository</a>. This is not
+            without problems.
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>The IBibilio repository can be down or has a very long response time.
+                </p></li><li class="listitem"><p>The <code class="literal">pom.xml</code>'s of many projects have wrong information (as one example, the pom of
+                    <code class="literal">commons-httpclient-3.0</code> declares JUnit as a runtime dependency).
+                </p></li><li class="listitem"><p>For many projects there is not one right set of dependencies (as more or less imposed by the
+                    <code class="literal">pom</code>
+                    format).
+                </p></li></ul></div><p>If your project relies on the IBibilio repository you are likely to need an additional custom repository,
+            because:
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>You might need dependencies that are not uploaded to IBibilio yet.
+                </p></li><li class="listitem"><p>You want to deal properly with wrong metadata in a IBibilio <code class="literal">pom.xml</code>.
+                </p></li><li class="listitem"><p>You don't want to expose people who want to build your project, to the
+                    downtimes or sometimes very long response times of IBibilio.
+                </p></li></ul></div><p>It is not a big deal to set-up a custom repository.
+            <sup>[<a href="#ftn.N12EF5" name="N12EF5" class="footnote">23</a>]</sup>
+            But it can be tedious, to keep it up to date. For a new version, you have always to create the new XML
+            descriptor and the directories. And your custom repository is another infrastructure element which might
+            have downtimes and needs to be updated. To enable historical builds, you need to keep all the past
+            libraries and you need a backup. It is another layer of indirection. Another source of information
+            you have to lookup. All this is not really a big deal but in its sum it has an impact. Repository Manager like
+            Artifactory or Nexus make this easier. But for example open source projects don't usually have a host for those products.
+        </p><p>This is a reason why some projects prefer to store their libraries in their version control system. This
+            approach is fully supported by Gradle. The libraries can be stored in a flat directory without any XML module
+            descriptor files.  Yet Gradle offers complete transitive dependency management. You can use either client module
+            dependencies to express the dependency relations, or artifact dependencies in case a first level dependency has no
+            transitive dependencies. People can check out such a project from svn and have everything necessary to build it.
+        </p><p>If you are working with a distributed version control system like Git you probably don't want to
+        use the version control system to store libraries as people check out the whole history. But even here the flexibility
+        of Gradle can make your life easier. For example you can use a shared flat directory without XML descriptors and
+        yet you can have full transitive dependency management as described above.</p><p>You could also have a mixed strategy. If your main concern is bad metadata in the <code class="literal">pom.xml</code> and maintaining
+            custom XML descriptors,
+            <span class="emphasis"><em>Client Modules</em></span>
+            offer an alternative. But you can of course still use Maven2 repo and your custom repository as a
+            repository for
+            <span class="emphasis"><em>jars only</em></span>
+            and still enjoy
+            <span class="emphasis"><em>transitive</em></span>
+            dependency management. Or you can only provide client modules for pom's with bad metadata. For the
+            jars and the correct pom's you still use the remote repository.
+        </p><div class="section" title="28.6.1.&nbsp;Implicit transitive dependencies"><div class="titlepage"><div><div><h3 class="title"><a name="sub:implicit_transitive_dependencies"></a>28.6.1.&nbsp;Implicit transitive dependencies</h3></div></div></div><p>There is another way to deal with transitive dependencies
+                <span class="emphasis"><em>without</em></span>
+                XML descriptor files. You can do this with Gradle, but we don't recommend it. We mention it for the sake
+                of completeness and comparison with other build tools.
+            </p><p>The trick is to use only artifact dependencies and group them in lists. That way you have somehow
+                expressed, what are your first level dependencies and what are transitive dependencies (see
+                <a class="xref" href="dependency_management.html#para:notation_collections">Section&nbsp;28.3.7, &ldquo;Optional attributes&rdquo;</a>).
+                But the draw-back is, that for the Gradle dependency management all dependencies are considered first level dependencies. The
+                dependency reports don't show your real dependency graph and the
+                <code class="literal">compile</code>
+                task uses all dependencies, not just the first level dependencies. All in all, your build is less
+                maintainable and reliable than it could be when using client modules. And you don't gain anything.
+            </p></div></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N12BD0" name="ftn.N12BD0" class="para">19</a>] </sup>JSR 294: Improved Modularity Support in the JavaTM Programming Language, <a class="ulink" href="http://jcp.org/en/jsr/detail?id=294" target="_top">http://jcp.org/en/jsr/detail?id=294</a>
+                    </p></div><div class="footnote"><p><sup>[<a href="#N12C25" name="ftn.N12C25" class="para">20</a>] </sup>Gradle supports partial multiproject builds (see<a class="xref" href="multi_project_builds.html" title="Chapter&nbsp;31.&nbsp;Multi-project Builds">Chapter&nbsp;31, <i>Multi-project Builds</i></a>).
+                        </p></div><div class="footnote"><p><sup>[<a href="#N12C45" name="ftn.N12C45" class="para">21</a>] </sup>
+                            <a class="ulink" href="http://www.sonatype.com/books/maven-book/reference/pom-relationships-sect-project-relationships.html" target="_top">http://www.sonatype.com/books/maven-book/reference/pom-relationships-sect-project-relationships.html</a>
+                        </p></div><div class="footnote"><p><sup>[<a href="#N12EAA" name="ftn.N12EAA" class="para">22</a>] </sup>At
+                        <a class="ulink" href="http://ant.apache.org/ivy/history/latest-milestone/concept.html" target="_top">http://ant.apache.org/ivy/history/latest-milestone/concept.html</a>
+                        you can learn more about ivy patterns.
+                    </p></div><div class="footnote"><p><sup>[<a href="#N12EF5" name="ftn.N12EF5" class="para">23</a>] </sup>If you want to shield your project from the downtimes of IBibilio things get more complicated. You
+                    probably want to set-up a repository proxy for this. In an enterprise environment this is rather
+                    common. For an open source project it looks like overkill.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">Previous</a><span>|</span><a href="artifact_management.html" title="Chapter&nbsp;29.&nbsp;Artifact Management">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

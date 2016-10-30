@@ -1,0 +1,160 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;21.&nbsp;The War Plugin</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="scala_plugin.html" title="Chapter&nbsp;20.&nbsp;The Scala Plugin"><link rel="next" href="jetty_plugin.html" title="Chapter&nbsp;22.&nbsp;The Jetty Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="scala_plugin.html" title="Chapter&nbsp;20.&nbsp;The Scala Plugin">Previous</a><span>|</span><a href="jetty_plugin.html" title="Chapter&nbsp;22.&nbsp;The Jetty Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;21.&nbsp;The War Plugin"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="war_plugin"></a>Chapter&nbsp;21.&nbsp;The War Plugin</h1></div></div></div><p>The War plugin extends the Java Plugin to add support for assembling web application WAR files.
+        It disables the default JAR archive generation of the Java Plugin and adds a default WAR archive task.
+    </p><div class="section" title="21.1.&nbsp;Tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N12481"></a>21.1.&nbsp;Tasks</h2></div></div></div><p>The War plugin adds the following tasks to the project.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;21.1.&nbsp;War plugin - tasks</b></p><div class="table-contents"><table id="N12486"><thead><tr>
+                    <td>Task name</td>
+                    <td>Depends on</td>
+                    <td>Type</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">war</code>
+                </td>
+                <td>
+                    <code class="literal">compile</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/groovydoc/org/gradle/api/tasks/bundling/War.html" target="_top">
+              <code class="classname">War</code>
+            </a>
+          </td>
+                <td>Assembles the application WAR file.</td>
+            </tr></table></div></div><p>The War plugin adds the following dependencies to tasks added by the Java plugin.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;21.2.&nbsp;War plugin - additional task dependencies</b></p><div class="table-contents"><table id="N124B5"><thead><td>Task name</td><td>Depends on</td></thead><tr>
+                <td>assemble</td>
+                <td>war</td>
+            </tr></table></div></div><div class="figure"><a name="N124C5"></a><p class="title"><b>Figure&nbsp;21.1.&nbsp;War plugin - tasks</b></p><div class="figure-contents"><img src="images/warPluginTasks.png" alt="War plugin - tasks"></div></div><br class="figure-break"></div><div class="section" title="21.2.&nbsp;Project layout"><div class="titlepage"><div><div><h2 class="title"><a name="N124CB"></a>21.2.&nbsp;Project layout</h2></div></div></div><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;21.3.&nbsp;War plugin - project layout</b></p><div class="table-contents"><table id="N124CE"><thead><tr>
+                    <td>Directory</td>
+                    <td>Meaning</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="filename">src/main/webapp</code>
+                </td>
+                <td>Web application sources</td>
+            </tr></table></div></div></div><div class="section" title="21.3.&nbsp;Dependency management"><div class="titlepage"><div><div><h2 class="title"><a name="N124E5"></a>21.3.&nbsp;Dependency management</h2></div></div></div><p>The War plugin adds two dependency configurations: <code class="literal">providedCompile</code> and
+            <code class="literal">providedRuntime</code>. Those configurations have the same scope as the respective
+            <code class="literal">compile</code> and <code class="literal">runtime</code> configurations, except that they are not added to
+            the WAR archive. It is important to note that those <code class="literal">provided</code> configurations work
+            transitively. Let's say you add <code class="literal">commons-httpclient:commons-httpclient:3.0</code> to any of the
+            provided configurations. This dependency has a dependency on <code class="literal">commons-codec</code>.
+            This means neither <code class="literal">httpclient</code> nor <code class="literal">commons-codec</code> is added to your
+            WAR, even if <code class="literal">commons-codec</code> were an explicit dependency of your <code class="literal">compile</code>
+            configuration. If you don't want this transitive behavior, simply declare your <code class="literal">provided</code>
+            dependencies like <code class="literal">commons-httpclient:commons-httpclient:3.0@jar</code>.
+        </p></div><div class="section" title="21.4.&nbsp;Convention properties"><div class="titlepage"><div><div><h2 class="title"><a name="N12511"></a>21.4.&nbsp;Convention properties</h2></div></div></div><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;21.4.&nbsp;War plugin - directory properties</b></p><div class="table-contents"><table id="N12514"><thead><tr>
+                    <td>Property name</td>
+                    <td>Type</td>
+                    <td>Default value</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">webAppDirName</code>
+                </td>
+                <td>
+                    <code class="classname">String</code>
+                </td>
+                <td>
+                    <code class="filename">src/main/webapp</code>
+                </td>
+                <td>
+                    The name of the web application source directory, relative to the project directory.
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">webAppDir</code>
+                </td>
+                <td>
+                    <code class="classname">File</code> (read-only)
+                </td>
+                <td>
+                    <code class="filename">
+              <em class="replaceable"><code>projectDir</code></em>/<em class="replaceable"><code>webAppDirName</code></em>
+            </code>
+                </td>
+                <td>
+                    The web application source directory.
+                </td>
+            </tr></table></div></div><p>These properties are provided by a <a class="ulink" href="http://www.gradle.org/0.8/docs/groovydoc/org/gradle/api/plugins/WarPluginConvention.html" target="_top">
+          <code class="classname">WarPluginConvention</code>
+        </a>
+            convention object.
+        </p></div><div class="section" title="21.5.&nbsp;War"><div class="titlepage"><div><div><h2 class="title"><a name="sec:default_settings"></a>21.5.&nbsp;War</h2></div></div></div><p>The default behavior of the War task is to copy the content of <code class="literal">src/main/webapp</code>
+            to the root of the archive. Your <code class="literal">webapp</code> folder may of course contain a
+            <code class="literal">WEB-INF</code> sub-directory, which again may contain a <code class="literal">web.xml</code> file.
+            Your compiled classes are compiled to <code class="literal">WEB-INF/classes</code>. All the dependencies of the
+            <code class="literal">runtime</code>
+            <sup>[<a href="#ftn.N1257B" name="N1257B" class="footnote">18</a>]</sup>
+            configuration are copied to <code class="literal">WEB-INF/lib</code>.</p><p>Have also a look at <a class="ulink" href="http://www.gradle.org/0.8/docs/groovydoc/org/gradle/api/tasks/bundling/War.html" target="_top">
+          <code class="classname">War</code>
+        </a>.</p></div><div class="section" title="21.6.&nbsp;Customizing"><div class="titlepage"><div><div><h2 class="title"><a name="sec:customizing"></a>21.6.&nbsp;Customizing</h2></div></div></div><p>Here is an example with the most important customization options:
+        </p><div class="example"><a name="webproject"></a><p class="title"><b>Example&nbsp;21.1.&nbsp;Customization of war plugin</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">import</span> org.apache.commons.httpclient.HttpClient
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">import</span> org.apache.commons.httpclient.methods.GetMethod
+
+group = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'gradle'</span>
+version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0'</span>
+usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'war'</span>)
+usePlugin(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'jetty'</span>)
+
+configurations {
+   moreLibs
+}
+
+repositories {
+   flatDir(dirs: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$rootDir/lib"</span>)
+   mavenCentral()
+}
+
+dependencies {
+    compile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":compile:1.0"</span>
+    providedCompile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":providedCompile:1.0@jar"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"javax.servlet:servlet-api:2.5"</span>
+    runtime <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":runtime:1.0"</span>
+    providedRuntime <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":providedRuntime:1.0@jar"</span>
+    testCompile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"junit:junit:3.8.2"</span>
+    moreLibs <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":otherLib:1.0"</span>
+}
+
+war {
+    fileSet(dir: file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/rootContent'</span>)) <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// adds a file-set to the root of the archive</span>
+    webInf(dir: file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/additionalWebInf'</span>)) <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// adds a file-set to the WEB-INF dir.</span>
+    additionalLibs(dir: file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'additionalLibs'</span>)) <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// adds a file-set to the WEB-INF/lib dir.</span>
+    libConfigurations(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'moreLibs'</span>) <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// adds a configuration to the WEB-INF/lib dir.</span>
+    webXml = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/someWeb.xml'</span>) <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// copies a file to WEB-INF/web.xml</span>
+}
+
+jar.enabled = true
+
+[jettyRun, jettyRunWar]*.daemon = true
+stopKey = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'foo'</span>
+stopPort = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">9451</span>
+httpPort = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">8163</span>
+
+task runTest(dependsOn: jettyRun) &lt;&lt; {
+    callServlet()
+}
+
+task runWarTest(dependsOn: jettyRunWar) &lt;&lt; {
+    callServlet()
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">private</span> <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">void</span> callServlet() {
+    HttpClient client = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> HttpClient()
+    GetMethod method = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> GetMethod(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://localhost:$httpPort/customised/hello"</span>)
+    client.executeMethod(method)
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(buildDir, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"servlet-out.txt"</span>).write(method.getResponseBodyAsString())
+    jettyStop.execute()
+}</pre></div></div><br class="example-break"><p>Of course one can configure the different file-sets with a closure to define excludes and includes.
+        </p><p>If you want to enable the generation of the default jar archive additional to the war archive just type:
+        </p><div class="example"><a name="customisedWebApplication"></a><p class="title"><b>Example&nbsp;21.2.&nbsp;Generation of JAR archive in addition to WAR archive</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">jar.enabled = true</pre></div></div><br class="example-break"></div><div class="section" title="21.7.&nbsp;Eclipse WTP"><div class="titlepage"><div><div><h2 class="title"><a name="sec:eclipse_wtp"></a>21.7.&nbsp;Eclipse WTP</h2></div></div></div><p>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ide/eclipse/EclipseWtp.html" target="_top">
+          <code class="classname">EclipseWtp</code>
+        </a>
+            has a default instance with the name <code class="literal">eclipseWtp</code>. It generates a
+            <code class="filename">.settings/org.eclipse.wst.common.component</code> file.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N1257B" name="ftn.N1257B" class="para">18</a>] </sup>The
+                    <code class="literal">runtime</code>
+                    configuration extends the
+                    <code class="literal">compile</code>
+                    configuration.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="scala_plugin.html" title="Chapter&nbsp;20.&nbsp;The Scala Plugin">Previous</a><span>|</span><a href="jetty_plugin.html" title="Chapter&nbsp;22.&nbsp;The Jetty Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

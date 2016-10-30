@@ -1,0 +1,9 @@
+usePlugin 'java'
+version = 1.0
+
+task myZip(type: Zip) {
+    fileSet(dir: 'somedir')
+    baseName = 'customName'
+}
+
+println myZip.archiveName

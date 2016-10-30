@@ -1,0 +1,18 @@
+subprojects {
+    usePlugin 'java'
+    usePlugin 'eclipse'
+
+    repositories {
+       mavenCentral()
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.7'
+    }
+
+    group = 'org.gradle'
+    version = '1.0'
+    manifest.mainAttributes(provider: 'gradle')
+}
+
+dependsOnChildren()

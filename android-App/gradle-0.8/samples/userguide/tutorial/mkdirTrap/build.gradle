@@ -1,0 +1,12 @@
+classesDir = new File('build/classes')
+classesDir.mkdirs()
+task clean << {
+    ant.delete(dir: 'build')
+}
+task compile(dependsOn: 'clean') << {
+    if (!classesDir.isDirectory()) {
+        println 'The class directory does not exist. I can not operate'
+        // do something
+    }
+    // do something
+}

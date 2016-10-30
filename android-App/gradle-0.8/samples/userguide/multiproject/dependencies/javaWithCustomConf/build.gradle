@@ -1,0 +1,30 @@
+subprojects {
+    usePlugin('java')
+    group = 'org.gradle.sample'
+    version = '1.0'
+}
+
+project(':api') {
+    configurations {
+        spi
+    }
+    dependencies {
+        compile project(':shared')
+    }
+    task spiJar(type: Jar) {
+        baseName = 'api-spi'
+        confs = ['spi']
+        fileSet() {
+            include('org/gradle/sample/api/**')
+        }
+    }
+}
+
+project(':services:personService') {
+    dependencies {
+        compile project(':shared')
+        compile project(path: ':api', configuration: 'spi')
+        testCompile "junit:junit:3.8.2", project(':api')
+    }
+}
+

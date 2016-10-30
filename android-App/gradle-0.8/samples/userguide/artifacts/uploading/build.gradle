@@ -1,0 +1,24 @@
+usePlugin 'java'
+
+task myJar(type: Jar)
+
+artifacts {
+    archives myJar
+}
+
+repositories {
+    flatDir(name: 'fileRepo', dirs: "$projectDir/repo")
+}
+
+uploadArchives {
+    uploadDescriptor = false
+    repositories {
+        add project.repositories.fileRepo
+        add(new org.apache.ivy.plugins.resolver.SshResolver()) {
+            name = 'sshRepo'
+            user = 'username'
+            userPassword = 'pw'
+            host = "http://repo.mycompany.com"
+        }
+    }
+}

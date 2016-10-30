@@ -1,0 +1,18 @@
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    checkstyle
+}
+
+dependencies {
+    checkstyle group: 'checkstyle', name: 'checkstyle', version: '5.0'
+}
+
+task check << {
+    ant.taskdef(resource: 'checkstyletask.properties', classpath: configurations.checkstyle.asPath)
+    ant.checkstyle(config: 'checkstyle.xml') {
+        fileset(dir: 'src')
+    }
+}

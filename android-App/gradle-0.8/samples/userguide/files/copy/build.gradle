@@ -1,0 +1,17 @@
+task copyTask(type: Copy) {
+    from 'src/main/webapp'
+    into 'build/explodedWar'
+    include '**/*.html'
+    include '**/*.jsp'
+    include 'assets/**'
+}
+
+task copyMethod << {
+    copy {
+        from 'src/main/webapp'
+        into 'build/explodedWar'
+        include '**/*.html'
+        include '**/*.jsp'
+        include 'assets/**'
+    }
+}

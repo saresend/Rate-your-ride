@@ -1,0 +1,175 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;12.&nbsp;The Project and Task API</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="tutorial_this_and_that.html" title="Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'"><link rel="next" href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks"></head><body><div class="navheader"><div><div class="navbar"><a href="tutorial_this_and_that.html" title="Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'">Previous</a><span>|</span><a href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;12.&nbsp;The Project and Task API"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="project_and_task_api"></a>Chapter&nbsp;12.&nbsp;The Project and Task API</h1></div></div></div><div class="section" title="12.1.&nbsp;Project API"><div class="titlepage"><div><div><h2 class="title"><a name="sec:project_api"></a>12.1.&nbsp;Project API</h2></div></div></div><p>In the tutorial in <a class="xref" href="tutorial_using_tasks.html" title="Chapter&nbsp;4.&nbsp;Build Script Basics">Chapter&nbsp;4, <i>Build Script Basics</i></a> we used, for example, the
+            <code class="literal">task()</code> method. Where does this method come from? We said earlier that the build script
+            defines a project in Gradle. For Gradle, this means that it creates an instance of
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project</code>
+        </a> and associates this <code class="classname">Project</code> object with
+            the build script. As the build script executes, it configures this <code class="classname">Project</code> object.
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>Any method you call in your build script, which <span class="emphasis"><em>is not defined</em></span>
+                    in the build script, is delegated to the <code class="classname">Project</code> object.
+                </p></li><li class="listitem"><p>Any property you access in your build script, which <span class="emphasis"><em>is not defined</em></span>
+                    in the build script, is delegated to the <code class="classname">Project</code> object.
+                </p></li></ul></div><p>Let's try this out and try to access the <code class="literal">name</code> property of the
+            <code class="classname">Project</code> object.
+        </p><div class="example"><a name="projectApi"></a><p class="title"><b>Example&nbsp;12.1.&nbsp;Accessing property of the Project object</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task check &lt;&lt; {
+    println name
+    println project.name
+}</pre><p>Output of <strong class="userinput"><code>gradle -q check</code></strong>
+        </p><pre class="screen">&gt; gradle -q check
+projectApi
+projectApi</pre></div></div><br class="example-break"><p>Both <code class="literal">println</code> statements print out the same property. The first uses auto-delegation to
+            the <code class="classname">Project</code> object, for properties not defined in the build script. The other
+            statement uses the <code class="literal">project</code> property available to any build script, which returns the
+            associated <code class="classname">Project</code> object. Only if you define a property or a method which has the
+            same name as a member of the <code class="classname">Project</code> object, you need to use the <code class="literal">project</code>
+            property.
+        </p><p>Have a look at the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project</code>
+        </a> API to find out more about project
+            properties and methods.</p><div class="section" title="12.1.1.&nbsp;Standard project properties"><div class="titlepage"><div><div><h3 class="title"><a name="N109D0"></a>12.1.1.&nbsp;Standard project properties</h3></div></div></div><p>The <code class="classname">Project</code> object provides some standard properties, which are available in
+                your build script. The following table lists a few of the commonly used ones.
+            </p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;12.1.&nbsp;Project Properties</b></p><div class="table-contents"><table id="N109D8"><thead><tr>
+                        <td>Name</td>
+                        <td>Type</td>
+                        <td>Default Value</td>
+                    </tr></thead><tr>
+                    <td>
+              <code class="literal">project</code>
+            </td>
+                    <td>
+              <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+                <code class="classname">Project</code>
+              </a>
+            </td>
+                    <td>The <code class="classname">Project</code> instance</td>
+                </tr><tr>
+                    <td>
+              <code class="literal">name</code>
+            </td>
+                    <td>
+              <code class="classname">String</code>
+            </td>
+                    <td>The name of the directory containing the build script.</td>
+                </tr><tr>
+                    <td>
+              <code class="literal">path</code>
+            </td>
+                    <td>
+              <code class="classname">String</code>
+            </td>
+                    <td>The absolute path of the project.</td>
+                </tr><tr>
+                    <td>
+              <code class="literal">buildFile</code>
+            </td>
+                    <td>
+              <code class="classname">File</code>
+            </td>
+                    <td>The build script.</td>
+                </tr><tr>
+                    <td>
+              <code class="literal">projectDir</code>
+            </td>
+                    <td>
+              <code class="classname">File</code>
+            </td>
+                    <td>The directory containing the build script.</td>
+                </tr><tr>
+                    <td>
+              <code class="literal">buildDirName</code>
+            </td>
+                    <td>
+              <code class="classname">String</code>
+            </td>
+                    <td>
+              <code class="filename">build</code>
+            </td>
+                </tr><tr>
+                    <td>
+              <code class="literal">buildDir</code>
+            </td>
+                    <td>
+              <code class="classname">File</code>
+            </td>
+                    <td>
+              <code class="filename">
+                <em class="replaceable"><code>projectDir</code></em>/build</code>
+            </td>
+                </tr><tr>
+                    <td>
+              <code class="literal">group</code>
+            </td>
+                    <td>
+              <code class="classname">Object</code>
+            </td>
+                    <td>
+              <code class="literal">unspecified</code>
+            </td>
+                </tr><tr>
+                    <td>
+              <code class="literal">version</code>
+            </td>
+                    <td>
+              <code class="classname">Object</code>
+            </td>
+                    <td>
+              <code class="literal">unspecified</code>
+            </td>
+                </tr><tr>
+                    <td>
+              <code class="literal">ant</code>
+            </td>
+                    <td>
+              <code class="classname">AntBuilder</code>
+            </td>
+                    <td>An <code class="classname">AntBuilder</code> instance</td>
+                </tr></table></div></div><p>Below is a sample build which demonstrates some of these properties.</p><div class="example"><a name="projectCoreProperties"></a><p class="title"><b>Example&nbsp;12.2.&nbsp;Project properties</b></p><div class="example-contents"><p>Build layout</p><pre class="programlisting">projectCoreProperties/
+  build.gradle
+  subProject/
+    build.gradle</pre><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">task check &lt;&lt; {
+    allprojects {
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"project path $path"</span>
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"  project name = $name"</span>
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"  project dir = '${rootProject.relativePath(projectDir)}'"</span>
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"  build file = '${rootProject.relativePath(buildFile)}'"</span>
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"  build dir = '${rootProject.relativePath(buildDir)}'"</span>
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q check</code></strong>
+          </p><pre class="screen">&gt; gradle -q check
+project path :
+  project name = projectCoreProperties
+  project dir = ''
+  build file = 'build.gradle'
+  build dir = 'build'
+project path :subProject
+  project name = subProject
+  project dir = 'subProject'
+  build file = 'subProject/build.gradle'
+  build dir = 'subProject/build'</pre></div></div><br class="example-break"></div></div><div class="section" title="12.2.&nbsp;Task API"><div class="titlepage"><div><div><h2 class="title"><a name="sec:task_api"></a>12.2.&nbsp;Task API</h2></div></div></div><p>Many of the methods of the <code class="classname">Project</code> instance return task objects. We have already seen some ways that you can
+            use task objects in <a class="xref" href="tutorial_using_tasks.html" title="Chapter&nbsp;4.&nbsp;Build Script Basics">Chapter&nbsp;4, <i>Build Script Basics</i></a>.
+            Look here to learn more about <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Task.html" target="_top">
+          <code class="classname">Task</code>
+        </a>.
+        </p></div><div class="section" title="12.3.&nbsp;Summary"><div class="titlepage"><div><div><h2 class="title"><a name="N10AD6"></a>12.3.&nbsp;Summary</h2></div></div></div><p>The project and the task API constitute the core layer of Gradle and provide all the possible interaction
+            options with this layer.
+            <sup>[<a href="#ftn.N10ADB" name="N10ADB" class="footnote">8</a>]</sup>
+            This core-layer constitutes a language for dependency based programming.
+            <sup>[<a href="#ftn.N10AE2" name="N10AE2" class="footnote">9</a>]</sup>
+            There are many other projects providing such a language. There is Ant for Java, Rake and Rant for Ruby,
+            SCons for Python, the good old Make and many more.
+            <sup>[<a href="#ftn.N10AE9" name="N10AE9" class="footnote">10</a>]</sup>
+            We think that one thing that makes Gradle special compared to the other tools, is its strong support for
+            applying dependency based programming on <span class="emphasis"><em>multi-project</em></span> builds. We also think that just
+            Gradle's core layer (together with its integration of the Ant tasks), provides a more convenient build
+            system than Ant's core layer.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N10ADB" name="ftn.N10ADB" class="para">8</a>] </sup>There is more to come for this layer in the other chapters, e.g. support for multi-project builds
+                    (see <a class="xref" href="multi_project_builds.html" title="Chapter&nbsp;31.&nbsp;Multi-project Builds">Chapter&nbsp;31, <i>Multi-project Builds</i></a>).
+                </p></div><div class="footnote"><p><sup>[<a href="#N10AE2" name="ftn.N10AE2" class="para">9</a>] </sup>Martin Fowler has written about this:
+                    <a class="ulink" href="http://martinfowler.com/articles/rake.html#DependencyBasedProgramming" target="_top">http://martinfowler.com/articles/rake.html#DependencyBasedProgramming</a>
+                </p></div><div class="footnote"><p><sup>[<a href="#N10AE9" name="ftn.N10AE9" class="para">10</a>] </sup>Interestingly, Maven2 is the only major build system which does not use dependency based
+                    programming.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="tutorial_this_and_that.html" title="Chapter&nbsp;11.&nbsp;Tutorial - 'This and That'">Previous</a><span>|</span><a href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

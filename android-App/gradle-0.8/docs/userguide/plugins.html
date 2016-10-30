@@ -1,0 +1,149 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;17.&nbsp;Using Plugins</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="ant.html" title="Chapter&nbsp;16.&nbsp;Using Ant from Gradle"><link rel="next" href="java_plugin.html" title="Chapter&nbsp;18.&nbsp;The Java Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="ant.html" title="Chapter&nbsp;16.&nbsp;Using Ant from Gradle">Previous</a><span>|</span><a href="java_plugin.html" title="Chapter&nbsp;18.&nbsp;The Java Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;17.&nbsp;Using Plugins"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="plugins"></a>Chapter&nbsp;17.&nbsp;Using Plugins</h1></div></div></div><p>Now we look at <span class="emphasis"><em>how</em></span> Gradle provides build-by-convention and out of the box functionality.
+        These features are decoupled from the core of Gradle, and are provided via plugins. Although the plugins are
+        decoupled, we would like to point out that the Gradle core plugins are NEVER updated or changed for a
+        particular Gradle distribution. If there is a bug in the compile functionality of Gradle, we will release a new
+        version of Gradle. There is no change of behavior for the lifetime of a given distribution of Gradle.
+    </p><div class="section" title="17.1.&nbsp;Declaring plugins"><div class="titlepage"><div><div><h2 class="title"><a name="sec:using_plugins"></a>17.1.&nbsp;Declaring plugins</h2></div></div></div><p>If you want to use the plugin for building a Java project, simply include
+        </p><pre class="programlisting">usePlugin('java')</pre><p>in your script. That's all. From a technological point of view plugins use just the same
+            operations as you can use from your build scripts. That is, they use the Project and Task API (see
+            <a class="xref" href="project_and_task_api.html" title="Chapter&nbsp;12.&nbsp;The Project and Task API">Chapter&nbsp;12, <i>The Project and Task API</i></a>). The Gradle plugins use this API to:
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>Add tasks to the project (e.g. compile, test)
+                </p></li><li class="listitem"><p>Create dependencies between those tasks to let them execute in the appropriate order.
+                </p></li><li class="listitem"><p>Add dependency configurations to the project.</p></li><li class="listitem"><p>Add a so called <em class="firstterm">convention object</em> to the project.
+                </p></li></ul></div><p>Let's check this out:
+        </p><div class="example"><a name="pluginIntro"></a><p class="title"><b>Example&nbsp;17.1.&nbsp;Using plugin</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>
+
+task show &lt;&lt; {
+    println relativePath(compileJava.destinationDir)
+    println relativePath(processResources.destinationDir)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q show</code></strong>
+        </p><pre class="screen">&gt; gradle -q show
+build/classes/main
+build/classes/main</pre></div></div><br class="example-break"><p>The Java Plugin adds a <code class="literal">compileJava</code> task and a <code class="literal">processResources</code> task
+            to the project object which can be accessed by a build script. It has configured the <code class="literal">destinationDir</code>
+            property of both of these tasks.
+        </p><p>The <code class="literal">usePlugin()</code> method either takes a string or a class as an argument. You can write
+            <sup>[<a href="#ftn.N11212" name="N11212" class="footnote">14</a>]</sup>
+        </p><pre class="programlisting">usePlugin(org.gradle.api.plugins.JavaPlugin)</pre><p>Any class, which implements the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Plugin.html" target="_top">
+          <code class="classname">Plugin</code>
+        </a> interface, can be used as a
+            plugin. Just pass the class as an
+            argument. You don't need to configure anything else for this. If you want to access a custom plugin via a
+            string identifier, you must inform Gradle about the mapping. You can do this in the file
+            <code class="literal">plugin.properties</code>
+            in the top level directory of Gradle. It looks like this for the current release:
+        </p><div class="figure"><a name="N1122A"></a><p class="title"><b>Figure&nbsp;17.1.&nbsp;plugin.properties</b></p><div class="figure-contents"><pre class="programlisting">#
+# Copyright 2009 the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+base=org.gradle.api.plugins.BasePlugin
+java=org.gradle.api.plugins.JavaPlugin
+eclipse=org.gradle.api.plugins.EclipsePlugin
+groovy=org.gradle.api.plugins.GroovyPlugin
+war=org.gradle.api.plugins.WarPlugin
+osgi=org.gradle.api.plugins.osgi.OsgiPlugin
+jetty=org.gradle.api.plugins.jetty.JettyPlugin
+maven=org.gradle.api.plugins.MavenPlugin
+project-reports=org.gradle.api.plugins.ProjectReportsPlugin
+code-quality=org.gradle.api.plugins.quality.CodeQualityPlugin
+scala=org.gradle.api.plugins.scala.ScalaPlugin</pre></div></div><br class="figure-break"><p>If you want to use your own plugins, you must make sure that they are accessible via the build script
+            classpath (see <a class="xref" href="organizing_build_logic.html" title="Chapter&nbsp;34.&nbsp;Organizing Build Logic">Chapter&nbsp;34, <i>Organizing Build Logic</i></a> for more information). To learn more about how
+            to write custom plugins, see <a class="xref" href="custom_plugins.html" title="Chapter&nbsp;33.&nbsp;Writing Custom Plugins">Chapter&nbsp;33, <i>Writing Custom Plugins</i></a>.
+        </p></div><div class="section" title="17.2.&nbsp;Using the convention object"><div class="titlepage"><div><div><h2 class="title"><a name="sub:more_about_convention_objects"></a>17.2.&nbsp;Using the convention object</h2></div></div></div><p>If you use the Java Plugin
+            for example, there are a <code class="literal">compileJava</code> and a <code class="literal">processResources</code> task for
+            your production code (the same is true for your test
+            code). The default location for the output of those tasks is the directory <code class="literal">build/classes/main</code>.
+            What if you want to change this? Let's try:
+        </p><div class="example"><a name="pluginConfig"></a><p class="title"><b>Example&nbsp;17.2.&nbsp;Configuring a plugin task</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>
+
+task show &lt;&lt; {
+    processResources.destinationDir = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(buildDir, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'output'</span>)
+    println relativePath(processResources.destinationDir)
+    println relativePath(compileJava.destinationDir)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q show</code></strong>
+        </p><pre class="screen">&gt; gradle -q show
+build/output
+build/classes/main</pre></div></div><br class="example-break"><p>Setting the <code class="literal">destinationDir</code>
+            of the <code class="literal">processResources</code> task had only an effect on the <code class="literal">processResources</code>
+            task. Maybe this was what you wanted. But what if
+            you want to change the output directory for all tasks? It would be unfortunate if you had to do this for
+            each task separately.
+        </p><p>Gradle's tasks are usually <em class="firstterm">convention aware</em>. A plugin can add a convention object to
+            your project, and map certain values of this convention object to task properties.
+        </p><div class="example"><a name="pluginConvention"></a><p class="title"><b>Example&nbsp;17.3.&nbsp;Plugin convention object</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>
+
+task show &lt;&lt; {
+    sourceSets.main.classesDir = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(buildDir, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'output'</span>)
+    println relativePath(processResources.destinationDir)
+    println relativePath(compileJava.destinationDir)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q show</code></strong>
+        </p><pre class="screen">&gt; gradle -q show
+build/output
+build/output</pre></div></div><br class="example-break"><p>The Java Plugin has added a convention object with a <code class="literal">sourceSets</code>
+            property, which we use to set the classes directory. Notice that setting this has changed the <code class="literal">destinationDir</code>
+            property of both the <code class="literal">processResources</code> and
+            <code class="literal">compileJava</code> tasks.</p><p>By setting a task attribute explicitly (as we have done in the first example) you overwrite the convention
+            value for this particular task.
+        </p><p>Not all of the tasks attributes are mapped to convention object values. It is the decision of the plugin
+            to decide what are the shared properties and then bundle them in a convention object and map them to the
+            tasks.
+        </p><p>
+            The properties of a convention object can be accessed as project properties. As shown in the following
+            example, you can also access the convention object explicitly.
+        </p><div class="example"><a name="pluginAccessConvention"></a><p class="title"><b>Example&nbsp;17.4.&nbsp;Using the plugin convention object</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'java'</span>
+
+task show &lt;&lt; {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Access the convention property as a project property</span>
+    println relativePath(sourceSets.main.classesDir)
+    println relativePath(project.sourceSets.main.classesDir)
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Access the convention property via the convention object</span>
+    println relativePath(convention.sourceSets.main.classesDir)
+    println relativePath(convention.plugins.java.sourceSets.main.classesDir)
+}</pre><p>Output of <strong class="userinput"><code>gradle -q show</code></strong>
+        </p><pre class="screen">&gt; gradle -q show
+build/classes/main
+build/classes/main
+build/classes/main
+build/classes/main</pre></div></div><br class="example-break"><p>Every project object has a <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/Convention.html" target="_top">
+          <code class="classname">Convention</code>
+        </a> object which is a
+            container for convention objects contributed
+            by the plugins declared for your project. If you simply access or set a property or access a method in
+            your build script, the project object first looks if this is a property of itself. If not, it delegates
+            the request to its convention object. The convention object checks if any of the plugin convention
+            objects can fulfill the request (first wins and the order is not defined). The plugin convention objects
+            also introduce a namespace.
+        </p><div class="section" title="17.2.1.&nbsp;Declaring plugins multiple times"><div class="titlepage"><div><div><h3 class="title"><a name="sub:declaring_plugins_multiple_times"></a>17.2.1.&nbsp;Declaring plugins multiple times</h3></div></div></div><p>A plugin is only called once for a given project, even if you have multiple
+                <code class="literal">usePlugin()</code>
+                statements. An additional call after the first call has no effect but doesn't hurt either. This can be
+                important if you use plugins which extend other plugins. For example
+                <code class="literal">usePlugin('groovy')</code>
+                calls also the Java Plugin. We say the Groovy plugin extends the Java plugin. But you might as well
+                write:
+            </p><pre class="programlisting">usePlugin('java')
+usePlugin('groovy')</pre><p>If you use cross-project configuration in multi-project builds this is a useful feature.
+            </p></div></div><div class="section" title="17.3.&nbsp;Summary"><div class="titlepage"><div><div><h2 class="title"><a name="N112BC"></a>17.3.&nbsp;Summary</h2></div></div></div><p>Plugins provide tasks, which are glued together via dependsOn relations and a convention object.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N11212" name="ftn.N11212" class="para">14</a>] </sup>Thanks to Gradle's default imports (see <a class="xref" href="ide_support.html" title="Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it">Appendix&nbsp;C, <i>Existing IDE Support and how to cope without it</i></a>) you can also write
+                    <code class="literal">usePlugin(JavaPlugin)</code>
+                    in this case.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="ant.html" title="Chapter&nbsp;16.&nbsp;Using Ant from Gradle">Previous</a><span>|</span><a href="java_plugin.html" title="Chapter&nbsp;18.&nbsp;The Java Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

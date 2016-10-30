@@ -1,0 +1,11 @@
+usePlugin 'java'
+archivesBaseName = 'gradle'
+version = 1.0
+
+task myZip(type: Zip) {
+    appendix = 'wrapper'
+    classifier = 'src'
+    fileSet(dir: 'somedir')
+}
+
+println myZip.archiveName

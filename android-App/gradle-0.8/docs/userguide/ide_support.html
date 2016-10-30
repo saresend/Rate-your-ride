@@ -1,0 +1,50 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line"></head><body><div class="navheader"><div><div class="navbar"><a href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line">Previous</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="appendix" title="Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="ide_support"></a>Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it</h1></div></div></div><div class="section" title="C.1.&nbsp;IntelliJ"><div class="titlepage"><div><div><h2 class="title"><a name="sec:intellij"></a>C.1.&nbsp;IntelliJ</h2></div></div></div><p>Gradle has been mainly developed with Idea IntelliJ and its very good Groovy plugin. Gradle's build script
+            <sup>[<a href="#ftn.N13D0D" name="N13D0D" class="footnote">36</a>]</sup>
+            has also been developed with the support of this IDE. IntelliJ allows you to define any filepattern to be
+            interpreted as a Groovy script. In the case of Gradle you can define such a pattern for
+            <code class="filename">build.gradle</code>
+            and <code class="filename">settings.gradle</code>. This will already help very much. What is missing is the classpath
+            to the Gradle binaries to offer content assistance for the Gradle classes. You might add the Gradle jar
+            (which you can find in your distribution) to your project's classpath. It does not really belong there, but
+            if you do this you have a fantastic IDE support for developing Gradle scripts. Of course if you use
+            additional libraries for your build scripts they would further pollute your project classpath.
+        </p><p>We hope that in the future <code class="filename">*.gradle</code> files
+            get special treatment by IntelliJ and you will be able to define a specific classpath for them.
+        </p></div><div class="section" title="C.2.&nbsp;Eclipse"><div class="titlepage"><div><div><h2 class="title"><a name="N13D1C"></a>C.2.&nbsp;Eclipse</h2></div></div></div><p>There is a Groovy plugin for eclipse. We don't know in what state it is and how it would support Gradle.
+            In the next edition of this user guide we can hopefully write more about this.
+        </p></div><div class="section" title="C.3.&nbsp;Using Gradle without IDE support"><div class="titlepage"><div><div><h2 class="title"><a name="sec:using_gradle_without_ide_support"></a>C.3.&nbsp;Using Gradle without IDE support</h2></div></div></div><p>What we can do for you is to spare you typing things like
+            <code class="literal">throw new org.gradle.api.tasks.StopExecutionException()</code>
+            and just type
+            <code class="literal">throw new StopExecutionException()</code>
+            instead. We do this by automatically adding a set of import statements to the Gradle scripts before Gradle
+            executes them. This set is defined by a properties file
+            <code class="literal">gradle-imports</code>
+            in the Gradle distribution. It has the following content.
+        </p><div class="figure"><a name="N13D30"></a><p class="title"><b>Figure&nbsp;C.1.&nbsp;gradle-imports</b></p><div class="figure-contents"><pre class="programlisting">import org.gradle.*
+import org.gradle.util.*
+import org.gradle.api.*
+import org.gradle.api.artifacts.*
+import org.gradle.api.artifacts.dsl.*
+import org.gradle.api.artifacts.specs.*
+import org.gradle.api.dependencies.*
+import org.gradle.api.execution.*
+import org.gradle.api.file.*
+import org.gradle.api.logging.*
+import org.gradle.api.initialization.*
+import org.gradle.api.invocation.*
+import org.gradle.api.plugins.*
+import org.gradle.api.plugins.quality.*
+import org.gradle.api.specs.*
+import org.gradle.api.tasks.*
+import org.gradle.api.tasks.bundling.*
+import org.gradle.api.tasks.compile.*
+import org.gradle.api.tasks.javadoc.*
+import org.gradle.api.tasks.testing.*
+import org.gradle.api.tasks.util.*
+import org.gradle.api.tasks.wrapper.*</pre></div></div><br class="figure-break"><p>You can define a project specific set of imports to be added to your build scripts. Just place a file
+            called
+            <code class="literal">gradle-imports</code>
+            in your root project directory. If you start Gradle with the {-I} option, the imports defined in the Gradle
+            distribution are disabled. The imports defined in your project directory are always used.
+        </p></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N13D0D" name="ftn.N13D0D" class="para">36</a>] </sup>Gradle is built with Gradle
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line">Previous</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

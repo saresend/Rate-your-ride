@@ -1,0 +1,94 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;2.&nbsp;Overview</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="introduction.html" title="Chapter&nbsp;1.&nbsp;Introduction"><link rel="next" href="getting_started.html" title="Chapter&nbsp;3.&nbsp;Getting Started"></head><body><div class="navheader"><div><div class="navbar"><a href="introduction.html" title="Chapter&nbsp;1.&nbsp;Introduction">Previous</a><span>|</span><a href="getting_started.html" title="Chapter&nbsp;3.&nbsp;Getting Started">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;2.&nbsp;Overview"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="overview"></a>Chapter&nbsp;2.&nbsp;Overview</h1></div></div></div><div class="section" title="2.1.&nbsp;Features"><div class="titlepage"><div><div><h2 class="title"><a name="sec:special_feature_of_gradle"></a>2.1.&nbsp;Features</h2></div></div></div><p>Here is a list of some of Gradle's features.
+        </p><div class="variablelist"><dl><dt><span class="term">Language for Dependency Based Programming</span></dt><dd><p>This is the core of Gradle. Most build tools do offer such a thing. You can create tasks,
+                        create dependencies between them and those tasks get executed only once and in the right order.
+                        Yet compared to Ant
+                        <sup>[<a href="#ftn.N10075" name="N10075" class="footnote">1</a>]</sup>
+                        Gradle's task offer a rich API and can be any kind of object. Gradle's tasks support
+                        multi-project builds. There is much more to say about tasks later on.
+                    </p></dd><dt><span class="term">Flexible Build By Convention</span></dt><dd><p>Gradle offers you build-by-convention
+                        <span class="emphasis"><em>on top</em></span>
+                        of its core layer. It is the same idea as implemented by Maven. But Gradle's build-by-convention
+                        approach is highly configurable and flexible. And you don't have to use it, if you need utmost
+                        flexibility. You can enable/disable it on a per project basis in a multi-project build.
+                    </p></dd><dt><span class="term">Ant Tasks</span></dt><dd><p>Ant tasks are first class citizens. Using Ant tasks from Gradle is as convenient and more
+                        powerful than using Ant tasks from a
+                        <code class="literal">build.xml</code>
+                        file.
+                    </p></dd><dt><span class="term">Configure By DAG</span></dt><dd><p>Gradle has a distinct configuration and execution phase. Thus we can offer you special hooks.
+                        You can add configuration to your build, based on the complete execution graph of tasks, before
+                        any task is executed.
+                    </p></dd><dt><span class="term">Easy Ivy</span></dt><dd><p>Our dependency management is based on Apache Ivy, the most advanced and powerful dependency
+                        management in the Java world. We have Ivy integrated in our build-by-convention framework. It is
+                        ready to go out-of-the-box. Ivy is mostly used via its Ant tasks but it also provides an API.
+                        Gradle integrates deeply with Ivy via this API. Gradle has its own dependency DSL on top of Ivy.
+                        This DSL introduces a couple of features not provided by Ivy itself.
+                    </p></dd><dt><span class="term">Client Modules</span></dt><dd><p>We think dependency management is important to any project.
+                        <span class="emphasis"><em>Client Modules</em></span>
+                        provide this, without the need of remote repositories and
+                        <code class="literal">ivy.xml</code>
+                        or
+                        <code class="literal">pom.xml</code>
+                        files. For example you can just put your jars into svn and yet enjoy complete transitive
+                        dependency management. Gradle also support fully Ivy or Maven repository infrastructures based
+                        on
+                        <code class="literal">ivy.xml</code>
+                        or
+                        <code class="literal">pom.xml</code>
+                        files and remote repositories.
+                    </p></dd><dt><span class="term">Cross Project Configuration</span></dt><dd><p>Enjoy how easy and yet how extremely powerful the handling of multi-project builds can be.
+                        Gradle introduces
+                        <span class="emphasis"><em>Configuration Injection</em></span>
+                        to make this possible.
+                    </p></dd><dt><span class="term">Distinct Dependency Hierarchies</span></dt><dd><p>We allow you to model the project relationships in a multi-project build as they really are
+                        for your problem domain. Gradle follows your layout not vice versa.
+                    </p></dd><dt><span class="term">Partial Builds</span></dt><dd><p>With Maven multi-project builds only work if executed from the root project and thus requiring
+                        a complete build. If you build from a subproject, only the subproject is built, not the projects
+                        the subproject depends on. Gradle offers partial builds. The subproject is built plus the
+                        projects it depends on. This is very convenient for larger builds.
+                    </p></dd><dt><span class="term">Internal Groovy DSL</span></dt><dd><p>Gradle's build scripts are written in Groovy, not XML. This offers many advantages to XML:
+                        Rich interaction with existing libraries, ease of use, more power and a slower learning curve
+                        are some of them.
+                    </p></dd><dt><span class="term">The Gradle Wrapper</span></dt><dd><p>The Gradle Wrapper allows you to execute Gradle builds on machines where Gradle is not
+                        installed. For example continuous integration servers or machines of users which want to build
+                        your open source project.
+                    </p></dd></dl></div><p>Gradle scales very well. It significantly increases your productivity, from rather simple single project
+            builds up to huge enterprise multi-project builds.
+        </p><p>Gradle is build by Gradle. From a build perspective Gradle is a simple project. But achieving the high
+            degree of automation we have, would have been very hard (and expensive) to achieve with Ant or Maven.
+        </p></div><div class="section" title="2.2.&nbsp;Why Groovy?"><div class="titlepage"><div><div><h2 class="title"><a name="sec:why_groovy"></a>2.2.&nbsp;Why Groovy?</h2></div></div></div><p>We think the advantages of an internal DSL (based on a dynamic language) over XML are tremendous in case
+            of <span class="emphasis"><em>build scripts</em></span>. There are a couple of dynamic languages out there. Why Groovy? The
+            answer lies in the context Gradle is operating in. Although Gradle is a general purpose build tool at its
+            core, its main focus are Java projects.
+            <sup>[<a href="#ftn.N100DA" name="N100DA" class="footnote">2</a>]</sup>
+            In such projects obviously the team members know Java. One problem we see with Ant
+            <sup>[<a href="#ftn.N100DE" name="N100DE" class="footnote">3</a>]</sup>
+            and Maven is, that it involves a lot of knowledge only available to the build master. Such builds are very
+            hard to comprehend, let alone to modify by a person not deeply involved with those tools. We think a build
+            should be as transparent as possible to
+            <span class="emphasis"><em>all</em></span>
+            team members.
+        </p><p>You might argue why not using Java then as the language for build scripts. We think this is a valid
+            question. It would have the highest transparency for your team and the lowest learning curve. But due to
+            limitations of Java such a build language would not be as nice, expressive and powerful as it could be.
+            <sup>[<a href="#ftn.N100E7" name="N100E7" class="footnote">4</a>]</sup>
+            Languages like Python, Groovy or Ruby do a much better job here. We have chosen Groovy as it offers by far
+            the highest transparency for Java people. Its base syntax is the same as Java's as well as its type system,
+            its package structure other things. Groovy builds a lot on top of that. But on a common ground with Java.
+        </p><p>For Java teams which share also Python or Ruby knowledge or are happy to learn it the above arguments
+            don't apply. In the near future Gradle wants to give you a choice between different languages for your build
+            scripts. For Jython or JRuby this should be easy to implement. If members of those communities are
+            interested in joining this effort, this is very much appreciated.
+        </p></div><div class="section" title="2.3.&nbsp;Missing features"><div class="titlepage"><div><div><h2 class="title"><a name="sec:still_missing"></a>2.3.&nbsp;Missing features</h2></div></div></div><p>Here a list of features you might expect but are not available yet:
+        </p><div class="itemizedlist"><ul class="itemizedlist"><li class="listitem"><p>Creating IDE project and classpath files for IntelliJ and NetBeans. Gradle supports IDE project
+                    file generation for Eclipse.
+                </p></li><li class="listitem"><p>Integration with code coverage tools, such as Emma or Cobertura, and static analysis tools, such
+                    as Checkstyle, in our build-by-convention framework. Right now you have to integrate them yourself
+                    (for example using the Ant tasks for those tools).
+                </p></li></ul></div></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N10075" name="ftn.N10075" class="para">1</a>] </sup>We mean Ant's targets here.
+                            </p></div><div class="footnote"><p><sup>[<a href="#N100DA" name="ftn.N100DA" class="para">2</a>] </sup>Gradle also supports Groovy projects. Gradle will support Scala projects in a future release.
+                </p></div><div class="footnote"><p><sup>[<a href="#N100DE" name="ftn.N100DE" class="para">3</a>] </sup>If the advanced features are used (e.g. mixins, macrodefs, ...)
+                </p></div><div class="footnote"><p><sup>[<a href="#N100E7" name="ftn.N100E7" class="para">4</a>] </sup>At
+                    <a class="ulink" href="http://www.defmacro.org/ramblings/lisp.html" target="_top">http://www.defmacro.org/ramblings/lisp.html</a>
+                    you find an interesting article comparing Ant, XML, Java and Lisp. It's funny that the 'if Java had
+                    that syntax' syntax in this article is actually the Groovy syntax.
+                </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="introduction.html" title="Chapter&nbsp;1.&nbsp;Introduction">Previous</a><span>|</span><a href="getting_started.html" title="Chapter&nbsp;3.&nbsp;Getting Started">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

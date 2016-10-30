@@ -1,0 +1,57 @@
+import org.apache.commons.httpclient.HttpClient
+import org.apache.commons.httpclient.methods.GetMethod
+
+group = 'gradle'
+version = '1.0'
+usePlugin('war')
+usePlugin('jetty')
+
+configurations {
+   moreLibs
+}
+
+repositories {
+   flatDir(dirs: "$rootDir/lib")
+   mavenCentral()
+}
+
+dependencies {
+    compile ":compile:1.0"
+    providedCompile ":providedCompile:1.0@jar", "javax.servlet:servlet-api:2.5"
+    runtime ":runtime:1.0"
+    providedRuntime ":providedRuntime:1.0@jar"
+    testCompile "junit:junit:3.8.2"
+    moreLibs ":otherLib:1.0"
+}
+
+war {
+    fileSet(dir: file('src/rootContent')) // adds a file-set to the root of the archive
+    webInf(dir: file('src/additionalWebInf')) // adds a file-set to the WEB-INF dir.
+    additionalLibs(dir: file('additionalLibs')) // adds a file-set to the WEB-INF/lib dir.
+    libConfigurations('moreLibs') // adds a configuration to the WEB-INF/lib dir.
+    webXml = file('src/someWeb.xml') // copies a file to WEB-INF/web.xml
+}
+
+jar.enabled = true
+
+[jettyRun, jettyRunWar]*.daemon = true
+stopKey = 'foo'
+stopPort = 9451
+httpPort = 8163
+
+task runTest(dependsOn: jettyRun) << {
+    callServlet()
+}
+
+task runWarTest(dependsOn: jettyRunWar) << {
+    callServlet()
+}
+
+private void callServlet() {
+    HttpClient client = new HttpClient()
+    GetMethod method = new GetMethod("http://localhost:$httpPort/customised/hello")
+    client.executeMethod(method)
+    new File(buildDir, "servlet-out.txt").write(method.getResponseBodyAsString())
+    jettyStop.execute()
+}
+

@@ -1,0 +1,83 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Appendix&nbsp;B.&nbsp;Gradle Command Line</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="potential_traps.html" title="Appendix&nbsp;A.&nbsp;Potential Traps"><link rel="next" href="ide_support.html" title="Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it"></head><body><div class="navheader"><div><div class="navbar"><a href="potential_traps.html" title="Appendix&nbsp;A.&nbsp;Potential Traps">Previous</a><span>|</span><a href="ide_support.html" title="Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="appendix" title="Appendix&nbsp;B.&nbsp;Gradle Command Line"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="gradle_command_line"></a>Appendix&nbsp;B.&nbsp;Gradle Command Line</h1></div></div></div><p>The <span class="command"><strong>gradle</strong></span> command has the following usage:
+        </p><div class="cmdsynopsis"><p><code class="command">gradle</code>  [option...] [task-name...]</p></div><p>
+        The command-line options available for the <span class="command"><strong>gradle</strong></span> command are listed below:
+    </p><div class="variablelist"><dl><dt><span class="term">
+          <code class="option">-?</code>, <code class="option">-h</code>, <code class="option">--help</code>
+        </span></dt><dd><p>Shows a help message.</p></dd><dt><span class="term">
+          <code class="option">-C</code>, <code class="option">--cache</code>
+        </span></dt><dd><p>Specifies how compiled build scripts should be cached. Possible values are:
+                <code class="literal">rebuild</code>, <code class="literal">off</code>, <code class="literal">on</code>. Default value is
+                <code class="literal">on</code>. See <a class="xref" href="tutorial_this_and_that.html#sec:caching" title="11.4.&nbsp;Caching">Section&nbsp;11.4, &ldquo;Caching&rdquo;</a> for more details.
+            </p></dd><dt><span class="term">
+          <code class="option">-D</code>, <code class="option">--system-prop</code>
+        </span></dt><dd><p>Sets a system property of the JVM, for example <code class="literal">-Dmyprop=myvalue</code>.
+            </p></dd><dt><span class="term">
+          <code class="option">-I</code>, <code class="option">--init-script</code>
+        </span></dt><dd><p>Specifies an initialization script.  See
+                <a class="xref" href="init_scripts.html" title="Chapter&nbsp;35.&nbsp;Initialization Scripts">Chapter&nbsp;35, <i>Initialization Scripts</i></a> for details.</p></dd><dt><span class="term">
+          <code class="option">-K</code>, <code class="option">--default-import-file</code>
+        </span></dt><dd><p>Specifies the default import file.</p></dd><dt><span class="term">
+          <code class="option">-P</code>, <code class="option">--project-prop</code>
+        </span></dt><dd><p>Sets a project property of the root project, for example
+                <code class="literal">-Pmyprop=myvalue</code>.
+            </p></dd><dt><span class="term">
+          <code class="option">-S</code>, <code class="option">--full-stacktrace</code>
+        </span></dt><dd><p>Print out the full (very verbose) stacktrace for any exceptions. See <a class="xref" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Chapter&nbsp;15, <i>Logging</i></a>.
+            </p></dd><dt><span class="term">
+          <code class="option">-a</code>, <code class="option">--no-rebuild</code>
+        </span></dt><dd><p>Do not rebuild project dependencies.
+            </p></dd><dt><span class="term">
+          <code class="option">-b</code>, <code class="option">--build-file</code>
+        </span></dt><dd><p>Specifies the build file.
+            </p></dd><dt><span class="term">
+          <code class="option">-c</code>, <code class="option">--settings-file</code>
+        </span></dt><dd><p>Specifies the settings file.</p></dd><dt><span class="term">
+          <code class="option">-d</code>, <code class="option">--debug</code>
+        </span></dt><dd><p>Log in debug mode (includes normal stacktrace). See <a class="xref" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Chapter&nbsp;15, <i>Logging</i></a>.
+            </p></dd><dt><span class="term">
+          <code class="option">-e</code>, <code class="option">--embedded</code>
+        </span></dt><dd><p>Specify an embedded build script.
+            </p></dd><dt><span class="term">
+          <code class="option">-g</code>, <code class="option">--gradle-user-home</code>
+        </span></dt><dd><p>Specifies the Gradle user home directory.
+            </p></dd><dt><span class="term">
+          <code class="option">--gui</code>
+        </span></dt><dd><p>Launches a GUI application. See <a class="xref" href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface">Chapter&nbsp;10, <i>Using the Gradle Graphical User Interface</i></a>.
+            </p></dd><dt><span class="term">
+          <code class="option">-i</code>, <code class="option">--info</code>
+        </span></dt><dd><p>Set log level to info. See <a class="xref" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Chapter&nbsp;15, <i>Logging</i></a>.
+            </p></dd><dt><span class="term">
+          <code class="option">-l</code>, <code class="option">--plugin-properties-file</code>
+        </span></dt><dd><p>Specifies the plugin properties file.
+            </p></dd><dt><span class="term">
+          <code class="option">-m</code>, <code class="option">--dry-run</code>
+        </span></dt><dd><p>Runs the build with all task actions disabled.</p></dd><dt><span class="term">
+          <code class="option">-n</code>, <code class="option">--dependencies</code>
+        </span></dt><dd><p>Show list of all project dependencies.
+            </p></dd><dt><span class="term">
+          <code class="option">--no-imports</code>
+        </span></dt><dd><p>Disable usage of default imports for build script files. See
+                <a class="xref" href="ide_support.html#sec:using_gradle_without_ide_support" title="C.3.&nbsp;Using Gradle without IDE support">Section&nbsp;C.3, &ldquo;Using Gradle without IDE support&rdquo;</a> for details.
+            </p></dd><dt><span class="term">
+          <code class="option">-p</code>, <code class="option">--project-dir</code>
+        </span></dt><dd><p>Specifies the start directory for Gradle. Defaults to current directory.
+            </p></dd><dt><span class="term">
+          <code class="option">-q</code>, <code class="option">--quiet</code>
+        </span></dt><dd><p>Log errors only. See <a class="xref" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Chapter&nbsp;15, <i>Logging</i></a>.</p></dd><dt><span class="term">
+          <code class="option">-r</code>, <code class="option">--properties</code>
+        </span></dt><dd><p>Show list of all available project properties.</p></dd><dt><span class="term">
+          <code class="option">-s</code>, <code class="option">--stacktrace</code>
+        </span></dt><dd><p>Print out the stacktrace also for user exceptions (e.g. compile error). See <a class="xref" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Chapter&nbsp;15, <i>Logging</i></a>.
+            </p></dd><dt><span class="term">
+          <code class="option">-t</code>, <code class="option">--tasks</code>
+        </span></dt><dd><p>Show list of all available tasks and their dependencies.
+            </p></dd><dt><span class="term">
+          <code class="option">-u</code>, <code class="option">--no-search-upwards</code>
+        </span></dt><dd><p>Don't search in parent folders for a <code class="filename">settings.gradle</code> file.
+            </p></dd><dt><span class="term">
+          <code class="option">-v</code>, <code class="option">--version</code>
+        </span></dt><dd><p>Prints version info.
+            </p></dd><dt><span class="term">
+          <code class="option">-x</code>, <code class="option">--exclude-task</code>
+        </span></dt><dd><p>Specifies a task to be excluded from execution.
+            </p></dd></dl></div><p>The same information is printed to the console when you execute <strong class="userinput"><code>gradle -h</code></strong>.</p></div><div class="navfooter"><div><div class="navbar"><a href="potential_traps.html" title="Appendix&nbsp;A.&nbsp;Potential Traps">Previous</a><span>|</span><a href="ide_support.html" title="Appendix&nbsp;C.&nbsp;Existing IDE Support and how to cope without it">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

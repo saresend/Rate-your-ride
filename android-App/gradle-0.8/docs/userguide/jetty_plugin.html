@@ -1,0 +1,92 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;22.&nbsp;The Jetty Plugin</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin"><link rel="next" href="maven_plugin.html" title="Chapter&nbsp;23.&nbsp;The Maven Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin">Previous</a><span>|</span><a href="maven_plugin.html" title="Chapter&nbsp;23.&nbsp;The Maven Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;22.&nbsp;The Jetty Plugin"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="jetty_plugin"></a>Chapter&nbsp;22.&nbsp;The Jetty Plugin</h1></div></div></div><p>The Jetty Plugin extends the War Plugin to add tasks which allow you to deploy your web application to a
+        Jetty web container embedded in the build.
+    </p><div class="section" title="22.1.&nbsp;Tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N125CE"></a>22.1.&nbsp;Tasks</h2></div></div></div><p>The Jetty plugin defines the following tasks:</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;22.1.&nbsp;Jetty plugin - tasks</b></p><div class="table-contents"><table id="N125D3"><thead><tr>
+                    <td>Task name</td>
+                    <td>Depends on</td>
+                    <td>Type</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">jettyRun</code>
+                </td>
+                <td>
+                    <code class="literal">compile</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/jetty/JettyRun.html" target="_top">
+              <code class="classname">JettyRun</code>
+            </a>
+          </td>
+                <td>Starts a Jetty instance and deploys the exploded web application to it.</td>
+            </tr><tr>
+                <td>
+                    <code class="literal">jettyRunWar</code>
+                </td>
+                <td>
+                    <code class="literal">war</code>
+                </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/jetty/JettyRunWar.html" target="_top">
+              <code class="classname">JettyRunWar</code>
+            </a>
+          </td>
+                <td>Starts a Jetty instance and deploys the WAR to it.</td>
+            </tr><tr>
+                <td>
+                    <code class="literal">jettyStop</code>
+                </td>
+                <td>-</td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/jetty/JettyStop.html" target="_top">
+              <code class="classname">JettyStop</code>
+            </a>
+          </td>
+                <td>Stops the Jetty instance.</td>
+            </tr></table></div></div><div class="figure"><a name="N12633"></a><p class="title"><b>Figure&nbsp;22.1.&nbsp;Jetty plugin - tasks</b></p><div class="figure-contents"><img src="images/jettyPluginTasks.png" alt="Jetty plugin - tasks"></div></div><br class="figure-break"></div><div class="section" title="22.2.&nbsp;Project layout"><div class="titlepage"><div><div><h2 class="title"><a name="N12639"></a>22.2.&nbsp;Project layout</h2></div></div></div><p>The Jetty plugin uses the same layout as the War plugin.</p></div><div class="section" title="22.3.&nbsp;Dependency management"><div class="titlepage"><div><div><h2 class="title"><a name="N1263E"></a>22.3.&nbsp;Dependency management</h2></div></div></div><p>The Jetty plugin does not define any dependency configurations.</p></div><div class="section" title="22.4.&nbsp;Convention properties"><div class="titlepage"><div><div><h2 class="title"><a name="N12643"></a>22.4.&nbsp;Convention properties</h2></div></div></div><p>The Jetty plugin defines the following convention properties:</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;22.2.&nbsp;Jetty plugin - properties</b></p><div class="table-contents"><table id="N12648"><thead><tr>
+                    <td>Property name</td>
+                    <td>Type</td>
+                    <td>Default value</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">httpPort</code>
+                </td>
+                <td>
+                    <code class="classname">Integer</code>
+                </td>
+                <td>
+                    <code class="literal">8080</code>
+                </td>
+                <td>
+                    The TCP port which Jetty should listen for HTTP requests on.
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">stopPort</code>
+                </td>
+                <td>
+                    <code class="classname">Integer</code>
+                </td>
+                <td>
+                    <code class="literal">null</code>
+                </td>
+                <td>
+                    The TCP port which Jetty should listen for admin requests on.
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">stopKey</code>
+                </td>
+                <td>
+                    <code class="classname">String</code>
+                </td>
+                <td>
+                    <code class="literal">null</code>
+                </td>
+                <td>
+                    The key to pass to Jetty when requesting it to stop.
+                </td>
+            </tr></table></div></div><p>These properties are provided by a <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/plugins/jetty/JettyPluginConvention.html" target="_top">
+          <code class="classname">JettyPluginConvention</code>
+        </a>
+            convention object.</p></div></div><div class="navfooter"><div><div class="navbar"><a href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin">Previous</a><span>|</span><a href="maven_plugin.html" title="Chapter&nbsp;23.&nbsp;The Maven Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

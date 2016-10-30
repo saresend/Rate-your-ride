@@ -1,0 +1,278 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;29.&nbsp;Artifact Management</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="dependency_management.html" title="Chapter&nbsp;28.&nbsp;Dependency Management"><link rel="next" href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle"></head><body><div class="navheader"><div><div class="navbar"><a href="dependency_management.html" title="Chapter&nbsp;28.&nbsp;Dependency Management">Previous</a><span>|</span><a href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;29.&nbsp;Artifact Management"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="artifact_management"></a>Chapter&nbsp;29.&nbsp;Artifact Management</h1></div></div></div><div class="section" title="29.1.&nbsp;Introduction"><div class="titlepage"><div><div><h2 class="title"><a name="N12F22"></a>29.1.&nbsp;Introduction</h2></div></div></div><p>This chapter is about how you declare what are the artifacts of your project and how to work with
+            them (e.g. upload them). We define the artifacts of the projects as the files the project want to
+            provide to the outside world. This can be a library or a distribution or any other file. Usually artifacts
+            are archives, but not necessarily. In the Maven world a project can provide only one artifact. With Gradle
+            a project can provide as many artifacts as needed.
+        </p></div><div class="section" title="29.2.&nbsp;Artifacts and configurations"><div class="titlepage"><div><div><h2 class="title"><a name="artifacts_and_configurations"></a>29.2.&nbsp;Artifacts and configurations</h2></div></div></div><p>Like dependencies, artifacts are grouped by configurations. In fact, a configuration can contain
+            both, artifacts and dependencies, at the same time. To assign an artifact to a configuration, you can write:
+        </p><div class="example"><a name="assignArtifact"></a><p class="title"><b>Example&nbsp;29.1.&nbsp;Assignment of an artifact to a configuration</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task myJar(type: Jar)
+
+artifacts {
+    archives myJar
+}</pre></div></div><br class="example-break"><p>What do you gain by assigning an artifact to a configuration? For each configuration (also for the custom
+        ones added by you) Gradle provides the tasks <code class="code">upload[ConfigurationName]</code> and
+        <code class="code">build[ConfigurationName]</code>.
+        <sup>[<a href="#ftn.N12F41" name="N12F41" class="footnote">24</a>]</sup>
+        Execution of these tasks will build or upload the artifacts belonging to
+        the respective configuration.
+        </p><p>Table <a class="xref" href="java_plugin.html#tab:configurations" title="Table&nbsp;18.5.&nbsp;Java plugin - dependency configurations">Table&nbsp;18.5, &ldquo;Java plugin - dependency configurations&rdquo;</a> shows the configurations added by the Java plugin. Two of the
+        configurations are relevant for the usage with artifacts. The <code class="code">archives</code> configuration is the standard
+        configuration to assign your artifacts to. The Java plugin automatically assigns the default jar to this
+        configuration. We will talk more about the <code class="code">default</code> configuration in <a class="xref" href="artifact_management.html#project_libraries" title="29.4.&nbsp;More about project libraries">Section&nbsp;29.4, &ldquo;More about project libraries&rdquo;</a>.
+            As with dependencies, you can declare as many custom configurations as you like and assign artifacts to them.
+        </p><p>It is important to note that the custom archives you are creating as part of your build are not
+        automatically assigned to any configuration. You have to explicitly do this assignment.</p></div><div class="section" title="29.3.&nbsp;Uploading artifacts"><div class="titlepage"><div><div><h2 class="title"><a name="N12F55"></a>29.3.&nbsp;Uploading artifacts</h2></div></div></div><p>We have said that there is a specific upload task for each configuration. But before you can do an upload,
+            you have to configure the upload task and define where to upload. The repositories you have defined (as described
+            in <a class="xref" href="dependency_management.html#sec:repositories" title="28.5.&nbsp;Repositories">Section&nbsp;28.5, &ldquo;Repositories&rdquo;</a>) are not automatically used for uploading. In fact, some of those repositories allow only for artifacts downloading.
+            Here is an example how
+            you can configure the upload task of a configuration:
+        </p><div class="example"><a name="uploading"></a><p class="title"><b>Example&nbsp;29.2.&nbsp;Configuration of the upload task</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">repositories {
+    flatDir(name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'fileRepo'</span>, dirs: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$projectDir/repo"</span>)
+}
+
+uploadArchives {
+    uploadDescriptor = false
+    repositories {
+        add project.repositories.fileRepo
+        add(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> org.apache.ivy.plugins.resolver.SshResolver()) {
+            name = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'sshRepo'</span>
+            user = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'username'</span>
+            userPassword = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'pw'</span>
+            host = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"http://repo.mycompany.com"</span>
+        }
+    }
+}</pre></div></div><br class="example-break"><p>As you can see, you can either use a reference to an existing repository or create a new repository.
+        As described in <a class="xref" href="dependency_management.html#sub:more_about_ivy_resolvers" title="28.5.6.&nbsp;More about Ivy resolvers">Section&nbsp;28.5.6, &ldquo;More about Ivy resolvers&rdquo;</a>, you can use all the Ivy resolvers suitable
+        for the purpose of uploading.</p><p>Uploading to a Maven repository is described in <a class="xref" href="artifact_management.html#uploading_to_maven_repositories" title="29.5.&nbsp;Interacting with Maven repositories">Section&nbsp;29.5, &ldquo;Interacting with Maven repositories&rdquo;</a>.</p></div><div class="section" title="29.4.&nbsp;More about project libraries"><div class="titlepage"><div><div><h2 class="title"><a name="project_libraries"></a>29.4.&nbsp;More about project libraries</h2></div></div></div><p>If your project is supposed to be used as a library, you need to define what are the artifacts of this library
+            and what are the dependencies of these artifacts. The Java plugin adds a <code class="code">default</code> configuration for
+            this purpose. This configuration extends both the <code class="code">archives</code> and the <code class="code">runtime</code> configuration,
+            with the implicit assumption that the <code class="code">runtime</code> dependencies are the dependencies of the <code class="code">archives</code>
+            configuration. Of course this is fully customizable. You can add your own custom configuration or let the the
+            existing configurations extends from other configurations. You might have different group of artifacts which have
+            a different set of dependencies. This mechanism is very powerful and flexible.
+            </p><p>If someone wants to use your project as a library, she simply needs to declare on which configuration of
+            the dependency to depend on.
+            A Gradle dependency offers the <code class="code">configuration</code> property to declare this. If this
+            is not specified, the <code class="code">default</code> configuration is used (see <a class="xref" href="dependency_management.html#sec:dependency_configurations" title="28.3.8.&nbsp;Dependency configurations">Section&nbsp;28.3.8, &ldquo;Dependency configurations&rdquo;</a>).
+            Using your project as a library
+            can either happen from within a multi-project build or by retrieving your project from a repository. In
+            the latter case, an ivy.xml descriptor in the repository is supposed to contain all the neccesary information. If you
+            work with Maven repositories you don't have the flexibility as described above. For how to publish to a Maven
+            repository, see the section <a class="xref" href="artifact_management.html#uploading_to_maven_repositories" title="29.5.&nbsp;Interacting with Maven repositories">Section&nbsp;29.5, &ldquo;Interacting with Maven repositories&rdquo;</a>.
+        </p></div><div class="section" title="29.5.&nbsp;Interacting with Maven repositories"><div class="titlepage"><div><div><h2 class="title"><a name="uploading_to_maven_repositories"></a>29.5.&nbsp;Interacting with Maven repositories</h2></div></div></div><div class="section" title="29.5.1.&nbsp;Introduction"><div class="titlepage"><div><div><h3 class="title"><a name="sec:introduction"></a>29.5.1.&nbsp;Introduction</h3></div></div></div><p>With Gradle you can deploy to remote Maven repositories or install to your local Maven repository. This
+                includes all Maven metadata manipulation and works also for Maven snapshots. In fact, Gradle's deployment is
+                100 percent Maven compatible as we use the native Maven Ant tasks under the hood.
+            </p><p>Deploying to a Maven repository is only half the fun if you don't have a pom. Fortunately Gradle can
+                generate this pom for you using the dependency information it has.
+            </p></div><div class="section" title="29.5.2.&nbsp;Deploying to a Maven repository"><div class="titlepage"><div><div><h3 class="title"><a name="sec:deploying_to_a_maven_repository"></a>29.5.2.&nbsp;Deploying to a Maven repository</h3></div></div></div><p>Let's assume your project produces just the default jar file. Now you want to deploy this jar file to
+                a remote Maven repository.
+            </p><div class="example"><a name="uploadFile"></a><p class="title"><b>Example&nbsp;29.3.&nbsp;Upload of file to remote Maven repository</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'maven'</span>
+
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"file://localhost/tmp/myRepo/"</span>)
+    }
+}</pre></div></div><br class="example-break"><p>That is all. Calling the
+                <code class="literal">uploadArchives</code>
+                task will generate the pom and deploys the artifact and the pom to the specified repository. 
+            </p><p>There is some more work to do if you need support for other protocols than <code class="literal">file</code>. In
+                this case the native Maven code we delegate to needs additional libraries. Which libraries depend on the
+                protocol you need. The available protocols and the corresponding libraries are listed in <a class="xref" href="artifact_management.html#wagonLibs" title="Table&nbsp;29.1.&nbsp;Protocol jars for Maven deployment">Table&nbsp;29.1, &ldquo;Protocol jars for Maven deployment&rdquo;</a> (those libraries have again transitive dependencies which have transitive
+                dependencies).
+                <sup>[<a href="#ftn.N12FC1" name="N12FC1" class="footnote">25</a>]</sup>
+                For example to use the ssh protocol you can do:
+            </p><div class="example"><a name="uploadWithSsh"></a><p class="title"><b>Example&nbsp;29.4.&nbsp;Upload of file via SSH</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">configurations {
+    deployerJars
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    deployerJars <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"org.apache.maven.wagon:wagon-ssh:1.0-beta-2"</span>
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        name = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'sshDeployer'</span> <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// optional</span>
+        configuration = configurations.deployerJars
+        repository(url: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"scp://repos.mycompany.com/releases"</span>) {
+            authentication(userName: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"me"</span>, password: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"myPassword"</span>)
+        }
+    }
+}</pre></div></div><br class="example-break"><p>There are many configuration options for the Maven deployer. The configuration is done via a Groovy builder.
+                All the elements of this tree are Java beans. To configure the simple attributes you pass a map to the bean
+                elements. To add another bean elements to its parent, you use a closure. In the example above <span class="emphasis"><em>repository</em></span>
+                and <span class="emphasis"><em>authentication</em></span> are such bean elements. <a class="xref" href="artifact_management.html#deployerConfig" title="Table&nbsp;29.2.&nbsp;Configuration elements of the MavenDeployer">Table&nbsp;29.2, &ldquo;Configuration elements of the MavenDeployer&rdquo;</a>
+                lists the available bean elements and a link to the javadoc of the corresponding class. In the javadoc you
+                can see the possible attributes you can set for a particular element.
+            </p><p>In Maven you can define repositories and optionally snapshot repositories. If no snapshot repository
+                is defined, releases and snapshots are both deployed to the
+                <code class="literal">repository</code>
+                element. Otherwise snapshots are deployed to the
+                <code class="literal">snapshotRepository</code>
+                element.
+            </p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;29.1.&nbsp;Protocol jars for Maven deployment</b></p><div class="table-contents"><table id="wagonLibs"><thead><tr>
+                        <td>Protocol</td>
+                        <td>Library</td>
+                    </tr></thead><tr>
+                    <td>http</td>
+                    <td>org.apache.maven.wagon:wagon-http:1.0-beta-2</td>
+                </tr><tr>
+                    <td>ssh</td>
+                    <td>org.apache.maven.wagon:wagon-ssh:1.0-beta-2</td>
+                </tr><tr>
+                    <td>ssh-external</td>
+                    <td>org.apache.maven.wagon:wagon-ssh-external:1.0-beta-2</td>
+                </tr><tr>
+                    <td>scp</td>
+                    <td>org.apache.maven.wagon:wagon-scp:1.0-beta-2</td>
+                </tr><tr>
+                    <td>ftp</td>
+                    <td>org.apache.maven.wagon:wagon-ftp:1.0-beta-2</td>
+                </tr><tr>
+                    <td>webdav</td>
+                    <td>org.apache.maven.wagon:wagon-webdav:1.0-beta-2</td>
+                </tr><tr>
+                    <td>file</td>
+                    <td>-</td>
+                </tr></table></div></div><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;29.2.&nbsp;Configuration elements of the MavenDeployer</b></p><div class="table-contents"><table id="deployerConfig"><thead><tr>
+                        <td>Element</td>
+                        <td>Javadoc</td>
+                    </tr></thead><tr>
+                    <td>root</td>
+                    <td>
+                        <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/maven/MavenDeployer.html" target="_top">
+                <code class="classname">MavenDeployer</code>
+              </a>
+                    </td>
+                </tr><tr>
+                    <td>repository</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/RemoteRepository.html" target="_top">
+                            org.apache.maven.artifact.ant.RemoteRepository
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td>authentication</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/Authentication.html" target="_top">
+                            org.apache.maven.artifact.ant.Authentication
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td>releases</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/RepositoryPolicy.html" target="_top">
+                            org.apache.maven.artifact.ant.RepositoryPolicy
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td>snapshots</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/RepositoryPolicy.html" target="_top">
+                            org.apache.maven.artifact.ant.RepositoryPolicy
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td>proxy</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/Proxy.html" target="_top">
+                            org.apache.maven.artifact.ant.Proxy
+                        </a>
+                    </td>
+                </tr><tr>
+                    <td>snapshotRepository</td>
+                    <td>
+                        <a class="ulink" href="http://maven.apache.org/ant-tasks/apidocs/org/apache/maven/artifact/ant/RemoteRepository.html" target="_top">
+                            org.apache.maven.artifact.ant.RemoteRepository
+                        </a>
+                    </td>
+                </tr></table></div></div></div><div class="section" title="29.5.3.&nbsp;Installing to the local repository"><div class="titlepage"><div><div><h3 class="title"><a name="sub:installing_to_the_local_repository"></a>29.5.3.&nbsp;Installing to the local repository</h3></div></div></div><p>The Maven plugin adds an <code class="literal">install</code> task to your project. This task depends on all the archives
+                task of the <code class="literal">archives</code> configuration. It installs those archives to your local Maven repository.
+                If the default location for the local repository is redefined in a Maven <code class="literal">settings.xml</code>, this is
+                considered by this task.
+            </p></div><div class="section" title="29.5.4.&nbsp;Maven Pom generation"><div class="titlepage"><div><div><h3 class="title"><a name="sec:maven_pom_generation"></a>29.5.4.&nbsp;Maven Pom generation</h3></div></div></div><p>The Maven Poms are automatically generated by Gradle. You can find the generated poms in the directory
+                <code class="literal">&lt;buildDir&gt;/poms</code>. In many scenarios it just works and you don't have to do anything.
+                But there are situations were you want or have to customize the pom generation.
+            </p><div class="section" title="29.5.4.1.&nbsp;Changing non-dependency elements of the pom"><div class="titlepage"><div><div><h4 class="title"><a name="sub:changing_non_dependency_elements_of_the_pom"></a>29.5.4.1.&nbsp;Changing non-dependency elements of the pom</h4></div></div></div><p>You might want the artifact deployed to the maven repository to have a different version or name than
+                    the artifact generated by Gradle. To customize these you can do:
+                </p><div class="example"><a name="customizePom"></a><p class="title"><b>Example&nbsp;29.5.&nbsp;Customization of pom</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"file://localhost/tmp/myRepo/"</span>)
+        pom.version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0Maven'</span>
+        pom.artifactId = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'myMavenName'</span>
+    }
+}</pre></div></div><br class="example-break"><p>To learn about all the customizable attributes of a pom have a look here: <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/maven/MavenPom.html" target="_top">
+              <code class="classname">MavenPom</code>
+            </a>.
+                    If you have more than one artifact to publish, things work differently. See <a class="xref" href="artifact_management.html#sub:multiple_artifacts_per_project" title="29.5.4.2.&nbsp;Multiple artifacts per project">Section&nbsp;29.5.4.2, &ldquo;Multiple artifacts per project&rdquo;</a>. 
+                </p><p>To customize the settings for the Maven installer (see <a class="xref" href="artifact_management.html#sub:installing_to_the_local_repository" title="29.5.3.&nbsp;Installing to the local repository">Section&nbsp;29.5.3, &ldquo;Installing to the local repository&rdquo;</a>), you can do:
+                </p><div class="example"><a name="customizeInstaller"></a><p class="title"><b>Example&nbsp;29.6.&nbsp;Customization of Maven installer</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">configure(install.repositories.mavenInstaller) {
+    pom.version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0Maven'</span>
+    pom.artifactId = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'myName'</span>
+}</pre></div></div><br class="example-break"></div><div class="section" title="29.5.4.2.&nbsp;Multiple artifacts per project"><div class="titlepage"><div><div><h4 class="title"><a name="sub:multiple_artifacts_per_project"></a>29.5.4.2.&nbsp;Multiple artifacts per project</h4></div></div></div><p>Maven can only deal with one artifact per project. This is reflected in the structure of the
+                    Maven pom. We think there are many situations where it makes sense to have more than one artifact per
+                    project. In such a case you need to generate multiple poms. In such a case you have to explicitly declare each artifact
+                    you want to publish to a Maven repository. The <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/maven/MavenDeployer.html" target="_top">
+              <code class="classname">MavenDeployer</code>
+            </a> and the MavenInstaller
+                    both provide an API for this:
+                </p><div class="example"><a name="multiplePoms"></a><p class="title"><b>Example&nbsp;29.7.&nbsp;Generation of multiple poms</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"file://localhost/tmp/myRepo/"</span>)
+        addFilter(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'api'</span>) { artifact, file -&gt;
+            artifact.name == <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'api'</span>
+        }
+        addFilter(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'service'</span>) { artifact, file -&gt;
+            artifact.name == <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'service'</span>
+        }
+        pom(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'api'</span>).version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'mySpecialMavenVersion'</span>
+    }
+}</pre></div></div><br class="example-break"><p>You need to declare a filter for each artifact you want to publish. This filter defines a boolean expression for
+                    which Gradle artifact it accepts. Each filter has a pom associated with it which you can configure. 
+                    To learn more about this have a look at <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/maven/GroovyPomFilterContainer.html" target="_top">
+              <code class="classname">GroovyPomFilterContainer</code>
+            </a>
+                    and its associated classes.
+                </p></div><div class="section" title="29.5.4.3.&nbsp;Dependency mapping"><div class="titlepage"><div><div><h4 class="title"><a name="sub:dependency_mapping"></a>29.5.4.3.&nbsp;Dependency mapping</h4></div></div></div><p>The Maven plugin configures the default mapping between the Gradle configurations added by the
+                    Java and War plugin and the Maven scopes. Most
+                    of the time you don't need to touch this and you can safely skip this section. The mapping
+                    works like the following. You can map a configuration to one and only one scope. Different
+                    configurations can be mapped to one or different scopes. One can assign also a priority to a particular
+                    configuration-to-scope mapping. Have a look at
+                    <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/maven/Conf2ScopeMappingContainer.html" target="_top">
+              <code class="classname">Conf2ScopeMappingContainer</code>
+            </a>
+                    to learn more. To access the mapping configuration you can say:
+                </p><div class="example"><a name="mappings"></a><p class="title"><b>Example&nbsp;29.8.&nbsp;Accessing a mapping configuration</b></p><div class="example-contents"><p>
+              <code class="filename">build.gradle</code>
+            </p><pre class="programlisting">task mappings &lt;&lt; {
+    println conf2ScopeMappings.mappings
+}</pre></div></div><br class="example-break"><p>Gradle exclude rules are converted to Maven excludes if possible. Such a conversion is possible if in
+                    the Gradle exclude rule the group as well as the module name is specified (as Maven needs both in
+                    contrast to Ivy). Right now excludes-per-configuration are not converted to the Maven Pom.
+                </p></div><div class="section" title="29.5.4.4.&nbsp;Planned future features"><div class="titlepage"><div><div><h4 class="title"><a name="sub:planned_future_features"></a>29.5.4.4.&nbsp;Planned future features</h4></div></div></div><p>We plan support for excludes-per-configuration. We also plan support for the new Ivy
+                    <span class="emphasis"><em>override</em></span>
+                    element, which corresponds to the
+                    <span class="emphasis"><em>dependencyManagement</em></span>
+                    element of a Maven pom. Last but not least we want to make the customization more powerful, by enabling
+                    to add custom dependency elements to the pom and remove/modify auto-generated ones.
+                </p></div></div></div><div class="footnotes"><br><hr align="left" width="100"><div class="footnote"><p><sup>[<a href="#N12F41" name="ftn.N12F41" class="para">24</a>] </sup>To be exact, the Base plugin provides those tasks. The BasePlugin is automatically applied, if you use
+        the Java plugin.</p></div><div class="footnote"><p><sup>[<a href="#N12FC1" name="ftn.N12FC1" class="para">25</a>] </sup>It is planned for a future release to provide out-of-the-box support for this
+                    </p></div></div></div><div class="navfooter"><div><div class="navbar"><a href="dependency_management.html" title="Chapter&nbsp;28.&nbsp;Dependency Management">Previous</a><span>|</span><a href="build_lifecycle.html" title="Chapter&nbsp;30.&nbsp;The Build Lifecycle">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

@@ -1,0 +1,7 @@
+dependsOn(':project1')
+println('quietProject2Out')
+
+buildscript {
+    println('quietProject2ScriptClassPathOut')
+    logger.info('infoProject2ScriptClassPathOut')
+}

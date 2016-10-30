@@ -1,0 +1,29 @@
+dependsOnChildren()
+
+allprojects {
+    usePlugin('java')
+    group = 'org.gradle.sample'
+    version = '1.0'
+}
+
+subprojects {
+    usePlugin('war')
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        compile "javax.servlet:servlet-api:2.5"
+    }
+}
+
+task explodedDist(dependsOn: assemble) << {
+    File explodedDist = mkdir(buildDir, 'explodedDist')
+    subprojects.each {project ->
+        project.tasks.withType(Jar).each {archiveTask ->
+            copy {
+                from archiveTask.archivePath
+                into explodedDist
+            }
+        }
+    }
+}

@@ -1,0 +1,210 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;14.&nbsp;Working With Files</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks"><link rel="next" href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging"></head><body><div class="navheader"><div><div class="navbar"><a href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks">Previous</a><span>|</span><a href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;14.&nbsp;Working With Files"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="working_with_files"></a>Chapter&nbsp;14.&nbsp;Working With Files</h1></div></div></div><div class="note" title="Note"><p>This chapter is a work in progress.</p></div><p>
+        Most builds work with files. Gradle adds some concepts and APIs to help you do this.
+    </p><div class="section" title="14.1.&nbsp;Locating files"><div class="titlepage"><div><div><h2 class="title"><a name="sec:locating_files"></a>14.1.&nbsp;Locating files</h2></div></div></div><p>You can locate a file relative to the project directory using the
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project.file()</code>
+        </a> method.
+        </p><div class="example"><a name="resolveFile"></a><p class="title"><b>Example&nbsp;14.1.&nbsp;Locating files</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Using a relative path</span>
+File configFile = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/config.xml'</span>)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Using an absolute path</span>
+configFile = file(configFile.absolutePath)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Using a File object with a relative path</span>
+configFile = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> File(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/config.xml'</span>))</pre></div></div><br class="example-break"><p>You can pass any object to the <code class="literal">file()</code> method, though usually you would pass it a
+            <code class="classname">String</code> or <code class="classname">File</code>. The supplied object's <code class="literal">toString()</code>
+            value is treated as a file path. If this path is an absolute path, it is used to construct a
+            <code class="classname">File</code> instance. Otherwise, a <code class="classname">File</code> instance is constructed by
+            prepending the project directory path to the supplied path.
+        </p><p>Using this method is a useful way to convert some user provided value into an absolute <code class="classname">File</code>.
+            It is preferable to using <code class="literal">new File(somePath)</code>, as <code class="literal">file()</code> always evaluates
+            the supplied path relative to the project directory, which is fixed, rather than the current working
+            directory, which may not always be the same.
+        </p></div><div class="section" title="14.2.&nbsp;File collections"><div class="titlepage"><div><div><h2 class="title"><a name="sec:file_collections"></a>14.2.&nbsp;File collections</h2></div></div></div><p>
+            A <em class="firstterm">file collection</em> is simply a set of files. It is represented by the
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/file/FileCollection.html" target="_top">
+          <code class="classname">FileCollection</code>
+        </a> interface. Many objects in Gradle implement this
+            interface. For example, <a class="link" href="dependency_management.html#sub:configurations" title="28.3.1.&nbsp;Configurations">dependency configurations</a> implement
+            <code class="literal">FileCollection</code>.
+        </p><p>
+            One way to obtain a <code class="literal">FileCollection</code> instance is to use the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project.files()</code>
+        </a>
+            method. You can pass this method any number of objects, which are then converted into a set of <code class="classname">File</code>
+            objects. The <code class="literal">files()</code> method accepts <code class="classname">File</code> and <code class="classname">String</code>
+            arguments. These are evaluated relative to the project directory, as described in <a class="xref" href="working_with_files.html#sec:locating_files" title="14.1.&nbsp;Locating files">Section&nbsp;14.1, &ldquo;Locating files&rdquo;</a>.
+            You can also pass collections, maps and arrays to the <code class="literal">files()</code> method. These are flattened
+            and the contents converted to <code class="classname">File</code> instances.
+        </p><div class="example"><a name="fileCollections"></a><p class="title"><b>Example&nbsp;14.2.&nbsp;Creating a file collection</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">FileCollection collection = files(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/file1.txt'</span>, file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/file2.txt'</span>), [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/file3.txt'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/file4.txt'</span>])</pre></div></div><br class="example-break"><p>A file collection is iterable, and can be converted to a number of other types using the <code class="literal">as</code>
+            operator. You can also add 2 file collections together using the <code class="literal">+</code> operator. Here are some examples.
+        </p><div class="example"><a name="fileCollections"></a><p class="title"><b>Example&nbsp;14.3.&nbsp;Using a file collection</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Iterate over the files in the collection</span>
+collection.each {File file -&gt;
+    file.name
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Convert the collection to various types</span>
+Set set = collection.files
+Set set2 = collection as Set
+List list = collection as List
+String path = collection.asPath
+File file = collection.singleFile
+File file2 = collection as File
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Add collections together</span>
+def collection2 = collection + files(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/file3.txt'</span>)</pre></div></div><br class="example-break"><p>You can also pass the <code class="literal">files()</code> method a closure or a <code class="classname">Callable</code>
+            instance. This is called when the contents of the collection are queried, and its return value is converted
+            to a set of <code class="classname">File</code> instances. The return value can be an object of any of the types
+            supported by the <code class="literal">files()</code> method. This is a simple way to 'implement' the
+            <code class="classname">FileCollection</code> interface.
+        </p><div class="example"><a name="fileCollections"></a><p class="title"><b>Example&nbsp;14.4.&nbsp;Implementing a file collection</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task list &lt;&lt; {
+    File srcDir
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a file collection using a closure</span>
+    collection = files { srcDir.listFiles() }
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a file collection using a Callable</span>
+    Callable callable = { srcDir.listFiles() } as Callable
+    collection = files(callable)
+
+    srcDir = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src'</span>)
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Contents of $srcDir.name"</span>
+    collection.each { println relativePath(it) }
+
+    srcDir = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src2'</span>)
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Contents of $srcDir.name"</span>
+    collection.each { println relativePath(it) }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q list</code></strong>
+        </p><pre class="screen">&gt; gradle -q list
+Contents of src
+src/dir1
+src/file1.txt
+Contents of src2
+src2/dir1
+src2/dir2</pre></div></div><br class="example-break"><p>The <code class="literal">files()</code> method also accepts <code class="classname">FileCollection</code> instances.</p></div><div class="section" title="14.3.&nbsp;File trees"><div class="titlepage"><div><div><h2 class="title"><a name="sec:file_trees"></a>14.3.&nbsp;File trees</h2></div></div></div><p>
+            A <em class="firstterm">file tree</em> is a hierarchy of files, such as a directory tree. It is represented
+            by the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/file/FileTree.html" target="_top">
+          <code class="classname">FileTree</code>
+        </a> interface. The <code class="literal">FileTree</code> interface
+            extends <code class="literal">FileCollection</code>, so you can treat a file tree exactly the same way as you would a
+            file collection. Several objects in Gradle implement the <code class="literal">FileTree</code> interface, such as
+            <a class="link" href="java_plugin.html#sec:source_sets" title="18.6.&nbsp;Working with source sets">source sets</a>.
+        </p><p>
+            One way to obtain a <code class="literal">FileTree</code> instance is to use the
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project.fileTree()</code>
+        </a> method.
+            This creates a <code class="literal">FileTree</code> defined with a base directory, and optionally some Ant-style
+            include and exclude patterns.
+        </p><div class="example"><a name="fileTrees"></a><p class="title"><b>Example&nbsp;14.5.&nbsp;Creating a file tree</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a file tree with a base directory</span>
+def tree = fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main'</span>)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Add include and exclude patterns to the tree</span>
+tree.include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.java'</span>
+tree.exclude <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/Abstract*'</span>
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a tree using path</span>
+tree = fileTree(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src'</span>).include(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.java'</span>)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a tree using closure</span>
+tree = fileTree {
+    from <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src'</span>
+    include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.java'</span>
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Create a tree using a map</span>
+tree = fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src'</span>, includes: [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.java'</span>])</pre></div></div><br class="example-break"><p>You use a file tree in the same way you use a file collection. You can also visit the contents of the
+            tree, and select a subtree using Ant-style patterns:
+        </p><div class="example"><a name="fileTrees"></a><p class="title"><b>Example&nbsp;14.6.&nbsp;Using a file tree</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Iterate over the contents of a tree</span>
+tree.each {File file -&gt;
+    println file
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Filter a tree</span>
+def filtered = tree.matching {
+    include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org/gradle/api/**'</span>
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Add trees together</span>
+def sum = tree + fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/test'</span>)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Visit the nodes of the tree</span>
+tree.visit {node -&gt;
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"$node.relativePath =&gt; $node.file"</span>
+}</pre></div></div><br class="example-break"></div><div class="section" title="14.4.&nbsp;Specifying a set of files"><div class="titlepage"><div><div><h2 class="title"><a name="sec:specifying_multiple_files"></a>14.4.&nbsp;Specifying a set of files</h2></div></div></div><p>Many objects in Gradle have properties which accept a logical set of files. For example, the
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/compile/Compile.html" target="_top">
+          <code class="classname">Compile</code>
+        </a> task has a <code class="literal">source</code> property,
+            which defines the source files to compile. You can set the value of this property using any of the types
+            supported by the <a class="link" href="working_with_files.html#sec:file_collections" title="14.2.&nbsp;File collections">files()</a> method, which we have seen above. This
+            means you can set the property using, for example, a <code class="classname">File</code>, <code class="classname">String</code>,
+            collection, <code class="classname">FileCollection</code> or even a closure.
+            Here are some examples:
+        </p><div class="example"><a name="inputFiles"></a><p class="title"><b>Example&nbsp;14.7.&nbsp;Specifying a set of files</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">compile {
+    source = file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>)
+}
+
+compile {
+    source = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>
+}
+
+compile {
+    source = [<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'../shared/java'</span>]
+}
+
+compile {
+    source = fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>).matching { include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org/gradle/api/**'</span> }
+}
+
+compile {
+    source = {
+        fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>) + fileTree(dir: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'../shared/java'</span>)
+    }
+}</pre></div></div><br class="example-break"><p>Usually, there is a method with the same name as the property, which appends to the set of files. Again,
+            this method accepts any of the types supported by the <a class="link" href="working_with_files.html#sec:file_collections" title="14.2.&nbsp;File collections">files()</a>
+            method.
+        </p><div class="example"><a name="inputFiles"></a><p class="title"><b>Example&nbsp;14.8.&nbsp;Specifying a set of files</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">compile {
+    source <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/java'</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/groovy'</span>
+    source file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'../shared/java'</span>)
+    source { file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/test/'</span>).listFiles() }
+}</pre></div></div><br class="example-break"></div><div class="section" title="14.5.&nbsp;Copying files"><div class="titlepage"><div><div><h2 class="title"><a name="sec:copying_files"></a>14.5.&nbsp;Copying files</h2></div></div></div><p>You can use the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/Copy.html" target="_top">
+          <code class="classname">Copy</code>
+        </a> task to copy files. The copy task allows
+            you to filter the contents of the files as they are copied, and to map the files names.
+        </p><div class="example"><a name="copy"></a><p class="title"><b>Example&nbsp;14.9.&nbsp;Copying files using the copy task</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task copyTask(type: Copy) {
+    from <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/webapp'</span>
+    into <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build/explodedWar'</span>
+    include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.html'</span>
+    include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.jsp'</span>
+    include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'assets/**'</span>
+}</pre></div></div><br class="example-break"><p>You can also use the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Project.html" target="_top">
+          <code class="classname">Project.copy()</code>
+        </a> method.</p><div class="example"><a name="copy"></a><p class="title"><b>Example&nbsp;14.10.&nbsp;Copying files using the copy() method</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task copyMethod &lt;&lt; {
+    copy {
+        from <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/main/webapp'</span>
+        into <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'build/explodedWar'</span>
+        include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.html'</span>
+        include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'**/*.jsp'</span>
+        include <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'assets/**'</span>
+    }
+}</pre></div></div><br class="example-break"></div></div><div class="navfooter"><div><div class="navbar"><a href="more_about_tasks.html" title="Chapter&nbsp;13.&nbsp;More about Tasks">Previous</a><span>|</span><a href="logging.html" title="Chapter&nbsp;15.&nbsp;Logging">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

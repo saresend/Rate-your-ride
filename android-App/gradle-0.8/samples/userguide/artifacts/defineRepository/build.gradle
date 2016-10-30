@@ -1,0 +1,38 @@
+repositories {
+    mavenCentral()
+}
+
+org.apache.ivy.util.url.CredentialsStore.INSTANCE.addCredentials("REALM", "HOST", "USER", "PASSWORD"); 
+
+repositories {
+    mavenCentral name: 'single-jar-repo', urls: "http://repo.mycompany.com/jars"
+    mavenCentral name: 'multi-jar-repos', urls: ["http://repo.mycompany.com/jars1", "http://repo.mycompany.com/jars2"]
+}
+
+repositories {
+    mavenRepo urls: "http://repo.mycompany.com/maven2"
+}
+
+repositories {
+    mavenRepo urls: ["http://repo2.mycompany.com/maven2", "http://repo.mycompany.com/jars"]
+}
+
+repositories {
+    flatDir name: 'localRepository', dirs: 'lib'
+    flatDir dirs: ['lib1', 'lib2']
+}
+
+
+task lookup << {
+    println repositories.localRepository.name
+    println repositories['localRepository'].name
+}
+
+repositories {
+    localRepository {
+        addArtifactPattern(file('lib').absolutePath + '/[name]/[revision]/[name]-[revision].[ext]')
+    }
+}
+repositories.localRepository {
+    addArtifactPattern(file('lib').absolutePath + '/[name]/[revision]/[name]-[revision].[ext]')
+}

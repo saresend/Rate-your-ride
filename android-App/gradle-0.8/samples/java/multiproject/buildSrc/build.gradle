@@ -1,0 +1,5 @@
+usePlugin 'java'
+
+dependencies {
+    compile files(BootstrapUtil.gradleClasspath)
+}

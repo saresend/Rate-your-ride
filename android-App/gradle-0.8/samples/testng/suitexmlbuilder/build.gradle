@@ -1,0 +1,28 @@
+usePlugin('java')
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	testCompile module('org.testng:testng:5.8') {
+	    artifact {
+	        name = 'testng'
+	        type = 'jar'
+	        extension = 'jar'
+	        classifier = 'jdk15'
+        }
+	}
+}
+
+test {
+	useTestNG() {
+        suiteXmlBuilder().suite(name: 'testing-testng') {
+            test (name : 'testing-testng', annotations : 'JDK', verbose:'1') {
+                classes {
+                    'class' (name: 'org.gradle.testng.UserImplTest')
+                }
+            }
+        }
+    }
+}

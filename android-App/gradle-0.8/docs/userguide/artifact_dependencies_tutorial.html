@@ -1,0 +1,63 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;8.&nbsp;Artifact Basics</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="web_project_tutorial.html" title="Chapter&nbsp;7.&nbsp;Web Application Quickstart"><link rel="next" href="tutorial_gradle_command_line.html" title="Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line"></head><body><div class="navheader"><div><div class="navbar"><a href="web_project_tutorial.html" title="Chapter&nbsp;7.&nbsp;Web Application Quickstart">Previous</a><span>|</span><a href="tutorial_gradle_command_line.html" title="Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;8.&nbsp;Artifact Basics"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="artifact_dependencies_tutorial"></a>Chapter&nbsp;8.&nbsp;Artifact Basics</h1></div></div></div><div class="note" title="Note"><p>This chapter is currently under construction.</p><p>For all the details of artifact handling see <a class="xref" href="artifact_management.html" title="Chapter&nbsp;29.&nbsp;Artifact Management">Chapter&nbsp;29, <i>Artifact Management</i></a>.</p></div><p>This chapter introduces some of the basics of artifact handling in Gradle.</p><div class="section" title="8.1.&nbsp;Artifact configurations"><div class="titlepage"><div><div><h2 class="title"><a name="sec:artifact_configurations"></a>8.1.&nbsp;Artifact configurations</h2></div></div></div><p>Artifacts are grouped into <em class="firstterm">configurations</em>. A configuration is simply a set of files
+            with a name. You can use them to declare the external dependencies your project has, or to declare the
+            artifacts which your project publishes.</p><p>To define a configuration:</p><div class="example"><a name="defineConfiguration"></a><p class="title"><b>Example&nbsp;8.1.&nbsp;Definition of a configuration</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">configurations {
+    compile
+}</pre></div></div><br class="example-break"><p>To access a configuration:</p><div class="example"><a name="defineConfiguration"></a><p class="title"><b>Example&nbsp;8.2.&nbsp;Accessing a configuration</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">println configurations.compile.name
+println configurations[<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compile'</span>].name</pre></div></div><br class="example-break"><p>To configure a configuration:</p><div class="example"><a name="defineConfiguration"></a><p class="title"><b>Example&nbsp;8.3.&nbsp;Configuration of a configuration</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">configurations {
+    compile {
+        description = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compile classpath'</span>
+        transitive = true
+    }
+    runtime {
+        extendsFrom compile
+    }
+}
+configurations.compile {
+    description = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compile classpath'</span>
+}</pre></div></div><br class="example-break"></div><div class="section" title="8.2.&nbsp;Repositories"><div class="titlepage"><div><div><h2 class="title"><a name="N1063E"></a>8.2.&nbsp;Repositories</h2></div></div></div><p>Artifacts are stored in <em class="firstterm">repositories</em>.</p><p>To use maven central repository:</p><div class="example"><a name="defineRepository"></a><p class="title"><b>Example&nbsp;8.4.&nbsp;Usage of Maven central repository</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">repositories {
+    mavenCentral()
+}</pre></div></div><br class="example-break"><p>To use a local directory:</p><div class="example"><a name="defineRepository"></a><p class="title"><b>Example&nbsp;8.5.&nbsp;Usage of a local directory</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">repositories {
+    flatDir name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localRepository'</span>, dirs: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib'</span>
+}</pre></div></div><br class="example-break"><p>You can also use any Ivy resolver. You can have multiple repositories.</p><p>To access a repository:</p><div class="example"><a name="defineRepository"></a><p class="title"><b>Example&nbsp;8.6.&nbsp;Accessing a repository</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">println repositories.localRepository.name
+    println repositories[<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'localRepository'</span>].name</pre></div></div><br class="example-break"><p>To configure a repository:</p><div class="example"><a name="defineRepository"></a><p class="title"><b>Example&nbsp;8.7.&nbsp;Configuration of a repository</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">repositories {
+    localRepository {
+        addArtifactPattern(file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib'</span>).absolutePath + <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'/[name]/[revision]/[name]-[revision].[ext]'</span>)
+    }
+}
+repositories.localRepository {
+    addArtifactPattern(file(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'lib'</span>).absolutePath + <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'/[name]/[revision]/[name]-[revision].[ext]'</span>)
+}</pre></div></div><br class="example-break"></div><div class="section" title="8.3.&nbsp;External dependencies"><div class="titlepage"><div><div><h2 class="title"><a name="N10680"></a>8.3.&nbsp;External dependencies</h2></div></div></div><p>To define an external dependency, you add a dependency to a configuration:</p><div class="example"><a name="externalDependencies"></a><p class="title"><b>Example&nbsp;8.8.&nbsp;Definition of an external dependency</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">configurations {
+    compile
+}
+
+dependencies {
+    compile group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'commons-collections'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'commons-collections'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'3.2'</span>
+}</pre></div></div><br class="example-break"><p>
+        <code class="literal">group</code> and <code class="literal">version</code> are optional</p><p>TBD - configuring an external dependency</p><p>To use the external dependencies of a configuration:</p><div class="example"><a name="externalDependencies"></a><p class="title"><b>Example&nbsp;8.9.&nbsp;Usage of external dependency of a configuration</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task listJars &lt;&lt; {
+    configurations.compile.each { File file -&gt; println file.name }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q listJars</code></strong>
+        </p><pre class="screen">&gt; gradle -q listJars
+commons-collections-3.2.jar</pre></div></div><br class="example-break"></div><div class="section" title="8.4.&nbsp;Artifact publishing"><div class="titlepage"><div><div><h2 class="title"><a name="N106B0"></a>8.4.&nbsp;Artifact publishing</h2></div></div></div><p>TBD</p></div><div class="section" title="8.5.&nbsp;API"><div class="titlepage"><div><div><h2 class="title"><a name="N106B5"></a>8.5.&nbsp;API</h2></div></div></div><p>Configurations are contained in a <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/ConfigurationContainer.html" target="_top">
+          <code class="classname">ConfigurationContainer</code>
+        </a>.
+            Each configuration implements the <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/artifacts/Configuration.html" target="_top">
+          <code class="classname">Configuration</code>
+        </a>.</p></div></div><div class="navfooter"><div><div class="navbar"><a href="web_project_tutorial.html" title="Chapter&nbsp;7.&nbsp;Web Application Quickstart">Previous</a><span>|</span><a href="tutorial_gradle_command_line.html" title="Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

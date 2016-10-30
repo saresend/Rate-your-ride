@@ -1,0 +1,149 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="artifact_dependencies_tutorial.html" title="Chapter&nbsp;8.&nbsp;Artifact Basics"><link rel="next" href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface"></head><body><div class="navheader"><div><div class="navbar"><a href="artifact_dependencies_tutorial.html" title="Chapter&nbsp;8.&nbsp;Artifact Basics">Previous</a><span>|</span><a href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="tutorial_gradle_command_line"></a>Chapter&nbsp;9.&nbsp;Using the Gradle Command-Line</h1></div></div></div><p>This chapter introduces the basics of the Gradle command-line. You run a build using the
+        <span class="command"><strong>gradle</strong></span> command, which you have already seen in action in previous chapters.</p><div class="section" title="9.1.&nbsp;Executing multiple tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N106D3"></a>9.1.&nbsp;Executing multiple tasks</h2></div></div></div><p>You can execute multiple tasks in a single build by listing each of the tasks on the command-line. For example,
+            the command <strong class="userinput"><code>gradle compile test</code></strong> will execute the <code class="literal">compile</code> and
+            <code class="literal">test</code> tasks. Gradle will execute the tasks in the order that they are listed on the
+            command-line, and will also execute the dependencies for each task. Each task is executed once only,
+            regardless of why it is included in the build: whether it was specified on the command-line, or it a
+            dependency of another task, or both. Let's look at an example.</p><p>
+            Below four tasks are defined. Both <code class="literal">dist</code> and <code class="literal">test</code> depend on the
+            <code class="literal">compile</code> task. Running <strong class="userinput"><code>gradle dist test</code></strong> for this build script
+            results in the <code class="literal">compile</code> task being executed only once.</p><div class="figure"><a name="N106F2"></a><p class="title"><b>Figure&nbsp;9.1.&nbsp;Task dependencies</b></p><div class="figure-contents"><img src="images/commandLineTutorialTasks.png" alt="Task dependencies"></div></div><br class="figure-break"><div class="example"><a name="multipleTasksFromCommandLine"></a><p class="title"><b>Example&nbsp;9.1.&nbsp;Executing multiple tasks</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">task compile &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compiling source'</span>
+}
+
+task compileTest(dependsOn: compile) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'compiling unit tests'</span>
+}
+
+task test(dependsOn: [compile, compileTest]) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'running unit tests'</span>
+}
+
+task dist(dependsOn: [compile, test]) &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'building the distribution'</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle dist test</code></strong>
+        </p><pre class="screen">&gt; gradle dist test
+:compile
+compiling source
+:compileTest
+compiling unit tests
+:test
+running unit tests
+:dist
+building the distribution
+
+BUILD SUCCESSFUL
+
+Total time: 1 secs</pre></div></div><br class="example-break"><p>
+            Because each task is executed once only, executing <strong class="userinput"><code>gradle test test</code></strong> is exactly the same
+            as executing <strong class="userinput"><code>gradle test</code></strong>.</p></div><div class="section" title="9.2.&nbsp;Excluding tasks"><div class="titlepage"><div><div><h2 class="title"><a name="sec:excluding_tasks_from_the_command_line"></a>9.2.&nbsp;Excluding tasks</h2></div></div></div><p>You can exclude a task from being executed using the <code class="option">-x</code> command-line option and providing
+            the name of the task to exclude. Let's try this with the sample build file above.</p><div class="example"><a name="excludeTask"></a><p class="title"><b>Example&nbsp;9.2.&nbsp;Excluding tasks</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle dist -x test</code></strong>
+        </p><pre class="screen">&gt; gradle dist -x test
+:compile
+compiling source
+:dist
+building the distribution
+
+BUILD SUCCESSFUL
+
+Total time: 1 secs</pre></div></div><br class="example-break"><p>You can see from the output of this example, that the <code class="literal">test</code> task is not executed, even
+            though it is a dependency of the <code class="literal">dist</code> task. You will also notice that the
+            <code class="literal">test</code> task's dependencies, such as <code class="literal">compileTest</code>
+            are not executed either. Those dependencies of <code class="literal">test</code> that are required by another task, such as
+            <code class="literal">compile</code>, are still executed.</p></div><div class="section" title="9.3.&nbsp;Task name abbreviation"><div class="titlepage"><div><div><h2 class="title"><a name="N1073B"></a>9.3.&nbsp;Task name abbreviation</h2></div></div></div><p>When you specify tasks on the command-line, you don't have to provide the full name of the task. You only need to provide enough of the
+            task name to uniquely identify the task. For example, in the sample build above, you can execute task
+            <code class="literal">dist</code> by running <strong class="userinput"><code>gradle d</code></strong>:</p><div class="example"><a name="abbreviateTaskName"></a><p class="title"><b>Example&nbsp;9.3.&nbsp;Abbreviated task name</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle d</code></strong>
+        </p><pre class="screen">&gt; gradle d
+:compile
+compiling source
+:compileTest
+compiling unit tests
+:test
+running unit tests
+:dist
+building the distribution
+
+BUILD SUCCESSFUL
+
+Total time: 1 secs</pre></div></div><br class="example-break"><p>You can also abbreviate each word in a camel case task name. For example, you can execute task <code class="literal">compileTest</code>
+            by running <strong class="userinput"><code>gradle compTest</code></strong> or even <strong class="userinput"><code>gradle cT</code></strong>
+      </p><div class="example"><a name="abbreviateCamelCaseTaskName"></a><p class="title"><b>Example&nbsp;9.4.&nbsp;Abbreviated camel case task name</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle cT</code></strong>
+        </p><pre class="screen">&gt; gradle cT
+:compile
+compiling source
+:compileTest
+compiling unit tests
+
+BUILD SUCCESSFUL
+
+Total time: 1 secs</pre></div></div><br class="example-break"><p>You can also use these abbreviations with the <code class="option">-x</code> command-line option.</p></div><div class="section" title="9.4.&nbsp;Selecting which build to execute"><div class="titlepage"><div><div><h2 class="title"><a name="N1076C"></a>9.4.&nbsp;Selecting which build to execute</h2></div></div></div><p>When you run the <span class="command"><strong>gradle</strong></span> command, it looks for a build file in the current directory.
+            You can use the <code class="option">-b</code> option to select another build file. For example:
+        </p><div class="example"><a name="selectProjectUsingBuildFile"></a><p class="title"><b>Example&nbsp;9.5.&nbsp;Selecting the project using a build file</b></p><div class="example-contents"><p>
+          <code class="filename">subdir/myproject.gradle</code>
+        </p><pre class="programlisting">task hello &lt;&lt; {
+    println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"using build file '$buildFile.name' in '$buildFile.parentFile.name'."</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q -b subdir/myproject.gradle hello</code></strong>
+        </p><pre class="screen">&gt; gradle -q -b subdir/myproject.gradle hello
+using build file 'myproject.gradle' in 'subdir'.</pre></div></div><br class="example-break"><p>Alternatively, you can use the <code class="option">-p</code> option to specify the project directory to use:</p><div class="example"><a name="selectProjectUsingProjectDir"></a><p class="title"><b>Example&nbsp;9.6.&nbsp;Selecting the project using project directory</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q -p subdir hello</code></strong>
+        </p><pre class="screen">&gt; gradle -q -p subdir hello
+using build file 'build.gradle' in 'subdir'.</pre></div></div><br class="example-break"></div><div class="section" title="9.5.&nbsp;Obtaining information about your build"><div class="titlepage"><div><div><h2 class="title"><a name="N1079A"></a>9.5.&nbsp;Obtaining information about your build</h2></div></div></div><p>Gradle provides several command-line options which show particular details of your build. This can be
+            useful for understanding the structure and dependencies of your build, and for debugging problems.
+        </p><p>Running <strong class="userinput"><code>gradle --tasks</code></strong>
+            gives you a list of the tasks which make up the build, broken down by project. This report shows the default
+            tasks, if any, of each project, and the description and dependencies of each task. Below is an example of
+            this report:
+        </p><div class="example"><a name="taskListReport"></a><p class="title"><b>Example&nbsp;9.7.&nbsp;Obtaining information about tasks</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q --tasks</code></strong>
+        </p><pre class="screen">&gt; gradle -q --tasks
+------------------------------------------------------------
+Root Project
+------------------------------------------------------------
+Default Tasks: dists
+
+:clean - Deletes the build directory (build)
+:dists 
+   -&gt; :api:libs, :webapp:libs
+
+------------------------------------------------------------
+Project :api
+------------------------------------------------------------
+:api:libs 
+rule - build&lt;ConfigurationName&gt;: builds the artifacts of the given configuration
+
+------------------------------------------------------------
+Project :webapp
+------------------------------------------------------------
+:webapp:libs 
+rule - build&lt;ConfigurationName&gt;: builds the artifacts of the given configuration</pre></div></div><br class="example-break"><p><a name="para:commandline_dependency_report"></a>Running <strong class="userinput"><code>gradle --dependencies</code></strong>
+            gives you a list of the dependencies of the build, broken down by project. This report shows the
+            configurations of each project. For each configuration, the direct and transitive dependencies of that
+            configuration are shown. Below is an example of this report:
+        </p><div class="example"><a name="dependencyListReport"></a><p class="title"><b>Example&nbsp;9.8.&nbsp;Obtaining information about dependencies</b></p><div class="example-contents"><p>Output of <strong class="userinput"><code>gradle -q --dependencies</code></strong>
+        </p><pre class="screen">&gt; gradle -q --dependencies
+------------------------------------------------------------
+Root Project
+------------------------------------------------------------
+No configurations
+
+------------------------------------------------------------
+Project :api
+------------------------------------------------------------
+compile
+|-----junit:junit:4.7:default
+
+------------------------------------------------------------
+Project :webapp
+------------------------------------------------------------
+compile
+|-----commons-io:commons-io:1.2:default</pre></div></div><br class="example-break"><p>Running <strong class="userinput"><code>gradle --properties</code></strong> gives you a list of the properties of each project in
+            the build.
+        </p><p>You can also use the <a class="link" href="project_reports_plugin.html" title="Chapter&nbsp;27.&nbsp;The Project Report Plugin">project report plugin</a> to add a
+            number of reporting tasks to your project.
+        </p></div><div class="section" title="9.6.&nbsp;Dry Run"><div class="titlepage"><div><div><h2 class="title"><a name="N107CE"></a>9.6.&nbsp;Dry Run</h2></div></div></div><p>Sometimes you are interested in which tasks are executed in which order for a given set of tasks specified on the
+            command line, but you don't want the tasks to be executed. You can use the <code class="option">-m</code> option for this.
+            For example <strong class="userinput"><code>gradle -m clean compile</code></strong> shows you all tasks to be executed as
+            part of the <code class="literal">clean</code> and <code class="literal">compile</code> tasks.
+            This is complementary to the <code class="option">-t</code>, which shows you all available tasks for execution.
+        </p></div><div class="section" title="9.7.&nbsp;Summary"><div class="titlepage"><div><div><h2 class="title"><a name="N107E2"></a>9.7.&nbsp;Summary</h2></div></div></div><p>In this chapter, you have seen some of the things you can do with Gradle from the command-line. You can
+            find out more about the <span class="command"><strong>gradle</strong></span> command in <a class="xref" href="gradle_command_line.html" title="Appendix&nbsp;B.&nbsp;Gradle Command Line">Appendix&nbsp;B, <i>Gradle Command Line</i></a>.</p></div></div><div class="navfooter"><div><div class="navbar"><a href="artifact_dependencies_tutorial.html" title="Chapter&nbsp;8.&nbsp;Artifact Basics">Previous</a><span>|</span><a href="tutorial_gradle_gui.html" title="Chapter&nbsp;10.&nbsp;Using the Gradle Graphical User Interface">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

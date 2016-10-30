@@ -1,0 +1,57 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;33.&nbsp;Writing Custom Plugins</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks"><link rel="next" href="organizing_build_logic.html" title="Chapter&nbsp;34.&nbsp;Organizing Build Logic"></head><body><div class="navheader"><div><div class="navbar"><a href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks">Previous</a><span>|</span><a href="organizing_build_logic.html" title="Chapter&nbsp;34.&nbsp;Organizing Build Logic">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;33.&nbsp;Writing Custom Plugins"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="custom_plugins"></a>Chapter&nbsp;33.&nbsp;Writing Custom Plugins</h1></div></div></div><p>A Gradle plugin packages up some reusable piece of build logic, which can be used across many different
+        projects and builds. Gradle allows you to implement your own custom plugins, so you can reuse your
+        build logic, and potentially share it with others.
+    </p><p>
+        You can implement a custom plugin in any language you like, provided the implementation ends up compiled as class
+        files. For the examples here, we are going to use Groovy as the implementation language. You could use
+        Java or Scala instead, if you wanted.
+    </p><p>There are several places where you can put the source for the plugin. Two convenient options
+        are to add the task implementation to your build script, or to put the source in the
+        <code class="filename">
+        <em class="replaceable"><code>rootProjectDir</code></em>/buildSrc/src/main/groovy</code> directory. Gradle will
+        take care of compiling the task and making it available on the classpath of the build script.
+        See <a class="xref" href="organizing_build_logic.html" title="Chapter&nbsp;34.&nbsp;Organizing Build Logic">Chapter&nbsp;34, <i>Organizing Build Logic</i></a> for more details, and some other options.
+        In our examples, we will put the task implementation in the build script, to keep things simple.
+    </p><p>To create a custom plugin, you need to write an implementation of <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/Plugin.html" target="_top">
+        <code class="classname">Plugin</code>
+      </a>.
+        Gradle instantiates the plugin and calls the plugin instance's <code class="literal">use()</code> method when the plugin
+        is used with a project. The project
+        object is passed as a parameter, which the plugin can use to configure the project however it needs to.
+        The following sample contains a greeting plugin, which adds a <code class="literal">hello</code> task to the project.
+    </p><div class="example"><a name="customPlugin"></a><p class="title"><b>Example&nbsp;33.1.&nbsp;A custom plugin</b></p><div class="example-contents"><p>
+        <code class="filename">build.gradle</code>
+      </p><pre class="programlisting">usePlugin(GreetingPlugin)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingPlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">implements</span> Plugin {
+    def <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">void</span> use(Project project, ProjectPluginsContainer projectPluginsHandler) {
+        project.task(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello'</span>) &lt;&lt; {
+            println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"Hello from the GreetingPlugin"</span>
+        }
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+      </p><pre class="screen">&gt; gradle -q hello
+Hello from the GreetingPlugin</pre></div></div><br class="example-break"><p>One thing to note is that only one instance of a given plugin is created for a given build. The same plugin
+        instance is used for all projects in the build.
+    </p><p>Let's add a convention object to the project. Here we add a <code class="literal">greeting</code> property to the
+        project, which allows you to configure the greeting.
+    </p><div class="example"><a name="customPluginWithConvention"></a><p class="title"><b>Example&nbsp;33.2.&nbsp;A custom plugin convention</b></p><div class="example-contents"><p>
+        <code class="filename">build.gradle</code>
+      </p><pre class="programlisting">usePlugin(GreetingPlugin)
+
+greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Hi from Gradle'</span>
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingPlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">implements</span> Plugin {
+    def <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">void</span> use(Project project, ProjectPluginsContainer projectPluginsHandler) {
+        project.convention.plugins.greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">new</span> GreetingPluginConvention()
+        project.task(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello'</span>) &lt;&lt; {
+            println project.greeting
+        }
+    }
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingPluginConvention {
+    def String greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'Hello from GreetingPlugin'</span>
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong>
+      </p><pre class="screen">&gt; gradle -q hello
+Hi from Gradle</pre></div></div><br class="example-break"></div><div class="navfooter"><div><div class="navbar"><a href="custom_tasks.html" title="Chapter&nbsp;32.&nbsp;Writing Custom Tasks">Previous</a><span>|</span><a href="organizing_build_logic.html" title="Chapter&nbsp;34.&nbsp;Organizing Build Logic">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>

@@ -1,0 +1,227 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter&nbsp;20.&nbsp;The Scala Plugin</title><link href="style.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle"><link rel="up" href="userguide.html" title="Gradle"><link rel="prev" href="groovy_plugin.html" title="Chapter&nbsp;19.&nbsp;The Groovy Plugin"><link rel="next" href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin"></head><body><div class="navheader"><div><div class="navbar"><a href="groovy_plugin.html" title="Chapter&nbsp;19.&nbsp;The Groovy Plugin">Previous</a><span>|</span><a href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div><div class="chapter" title="Chapter&nbsp;20.&nbsp;The Scala Plugin"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="scala_plugin"></a>Chapter&nbsp;20.&nbsp;The Scala Plugin</h1></div></div></div><p>The Scala Plugin extends the Java Plugin to add support for Scala projects. It can deal with Scala-only
+        projects and with mixed Java/Scala projects. It can even deal with Java-only projects.
+        The Scala plugin supports joint compilation of Java and Scala source. This means your project can contain
+        Scala classes which use Java classes, and vice versa.
+    </p><div class="section" title="20.1.&nbsp;Tasks"><div class="titlepage"><div><div><h2 class="title"><a name="N1225C"></a>20.1.&nbsp;Tasks</h2></div></div></div><p>The Scala plugin adds the following tasks to the project.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;20.1.&nbsp;Scala plugin - tasks</b></p><div class="table-contents"><table id="N12261"><thead><tr>
+                    <td>Task name</td>
+                    <td>Depends on</td>
+                    <td>Type</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+            <code class="literal">compileScala</code>
+          </td>
+                <td>
+            <code class="literal">compileJava</code>
+          </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/scala/ScalaCompile.html" target="_top">
+              <code class="classname">ScalaCompile</code>
+            </a>
+          </td>
+                <td>Compiles production Scala source files using scalac.</td>
+            </tr><tr>
+                <td>
+            <code class="literal">compileTestScala</code>
+          </td>
+                <td>
+            <code class="literal">compileTestJava</code>
+          </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/scala/ScalaCompile.html" target="_top">
+              <code class="classname">ScalaCompile</code>
+            </a>
+          </td>
+                <td>Compiles test Scala source files using scalac.</td>
+            </tr><tr>
+                <td>
+            <code class="literal">compile<em class="replaceable"><code>SourceSet</code></em>Scala</code>
+          </td>
+                <td>
+            <code class="literal">compile<em class="replaceable"><code>SourceSet</code></em>Java</code>
+          </td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/scala/ScalaCompile.html" target="_top">
+              <code class="classname">ScalaCompile</code>
+            </a>
+          </td>
+                <td>Compiles the given source set's Scala source files using scalac.</td>
+            </tr><tr>
+                <td>
+            <code class="literal">scaladoc</code>
+          </td>
+                <td>-</td>
+                <td>
+            <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/scala/ScalaDoc.html" target="_top">
+              <code class="classname">ScalaDoc</code>
+            </a>
+          </td>
+                <td>Generates API documentation for the production Scala source files using scaladoc.</td>
+            </tr></table></div></div><p>The Scala plugin adds the following dependencies to tasks added by the Java plugin.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;20.2.&nbsp;Scala plugin - additional task dependencies</b></p><div class="table-contents"><table id="N122E4"><thead><td>Task name</td><td>Depends on</td></thead><tr>
+                <td>
+                    <code class="literal">classes</code>
+                </td>
+                <td>
+                    <code class="literal">compileScala</code>
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">testClasses</code>
+                </td>
+                <td>
+                    <code class="literal">compileTestScala</code>
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">
+              <em class="replaceable"><code>sourceSet</code></em>Classes</code>
+                </td>
+                <td>
+                    <code class="literal">compile<em class="replaceable"><code>SourceSet</code></em>Scala</code>
+                </td>
+            </tr></table></div></div><div class="figure"><a name="N1231C"></a><p class="title"><b>Figure&nbsp;20.1.&nbsp;Scala plugin - tasks</b></p><div class="figure-contents"><img src="images/scalaPluginTasks.png" alt="Scala plugin - tasks"></div></div><br class="figure-break"></div><div class="section" title="20.2.&nbsp;Project layout"><div class="titlepage"><div><div><h2 class="title"><a name="N12322"></a>20.2.&nbsp;Project layout</h2></div></div></div><p>The Scala plugin assumes the project layout shown below.  All the Scala source directories can contain
+            Scala <span class="emphasis"><em>and</em></span> Java code. The Java source directories may only contain Java source code.
+            None of these directories need exist or have anything in them. The Scala plugin will compile whatever it
+            finds, and handles anything which is missing.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;20.3.&nbsp;Scala plugin - project layout</b></p><div class="table-contents"><table id="scalalayout"><thead><tr>
+                    <td>Directory</td>
+                    <td>Meaning</td>
+                </tr></thead><tr>
+        <td>
+            <code class="filename">src/main/java</code>
+        </td>
+        <td>Production Java source</td>
+    </tr><tr>
+        <td>
+            <code class="filename">src/main/resources</code>
+        </td>
+        <td>Production resources</td>
+    </tr><tr>
+                <td>
+                    <code class="filename">src/main/scala</code>
+                </td>
+                <td>Production Scala source. May also contain Java source for joint compilation.</td>
+            </tr><tr>
+        <td>
+            <code class="filename">src/test/java</code>
+        </td>
+        <td>Test Java source</td>
+    </tr><tr>
+        <td>
+            <code class="filename">src/test/resources</code>
+        </td>
+        <td>Test resources</td>
+    </tr><tr>
+                <td>
+                    <code class="filename">src/test/scala</code>
+                </td>
+                <td>Test Scala source. May also contain Java source for joint compilation.</td>
+            </tr><tr>
+        <td>
+            <code class="filename">src/<em class="replaceable"><code>sourceSet</code></em>/java</code>
+        </td>
+        <td>Java source for the given source set</td>
+    </tr><tr>
+        <td>
+            <code class="filename">src/<em class="replaceable"><code>sourceSet</code></em>/resources</code>
+        </td>
+        <td>Resources for the given source set</td>
+    </tr><tr>
+                <td>
+                    <code class="filename">src/<em class="replaceable"><code>sourceSet</code></em>/scala</code>
+                </td>
+                <td>Scala source for the given source set. May also contain Java source for joint compilation.</td>
+            </tr></table></div></div><div class="section" title="20.2.1.&nbsp;Changing the project layout"><div class="titlepage"><div><div><h3 class="title"><a name="N123AC"></a>20.2.1.&nbsp;Changing the project layout</h3></div></div></div><p>TBD</p><div class="example"><a name="customScalaSourceLayout"></a><p class="title"><b>Example&nbsp;20.1.&nbsp;Custom Scala source layout</b></p><div class="example-contents"><p>
+            <code class="filename">build.gradle</code>
+          </p><pre class="programlisting">sourceSets {
+    main {
+        scala {
+            srcDir <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/scala'</span>
+        }
+    }
+}</pre></div></div><br class="example-break"></div></div><div class="section" title="20.3.&nbsp;Dependency Management"><div class="titlepage"><div><div><h2 class="title"><a name="N123BD"></a>20.3.&nbsp;Dependency Management</h2></div></div></div><p>The Scala plugin adds a <code class="literal">scalaTools</code> configuration, which it uses to locate the Scala
+            tools, such as scalac, to use. You must specify the version of Scala to use. Below is an example.
+        </p><div class="example"><a name="declareScalaTools"></a><p class="title"><b>Example&nbsp;20.2.&nbsp;Declaring the Scala version to use</b></p><div class="example-contents"><p>
+          <code class="filename">build.gradle</code>
+        </p><pre class="programlisting">usePlugin <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'scala'</span>
+
+repositories {
+    mavenRepo urls: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'http://scala-tools.org/repo-releases/'</span>
+}
+
+dependencies {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Libraries needed to run the scala tools</span>
+    scalaTools <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.scala-lang:scala-compiler:2.7.6'</span>
+    scalaTools <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.scala-lang:scala-library:2.7.6'</span>
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Libraries needed for scala api</span>
+    compile <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.scala-lang:scala-library:2.7.6'</span>
+}</pre></div></div><br class="example-break"></div><div class="section" title="20.4.&nbsp;Convention Properties"><div class="titlepage"><div><div><h2 class="title"><a name="N123D1"></a>20.4.&nbsp;Convention Properties</h2></div></div></div><p>The Scala plugin does not add any convention properties to the project.</p></div><div class="section" title="20.5.&nbsp;Source set properties"><div class="titlepage"><div><div><h2 class="title"><a name="N123D6"></a>20.5.&nbsp;Source set properties</h2></div></div></div><p>The Scala plugin adds the following convention properties to each source set in the project. You can
+            use these properties in your build script as though they were properties of the source set object (see
+            <a class="xref" href="plugins.html#sub:more_about_convention_objects" title="17.2.&nbsp;Using the convention object">Section&nbsp;17.2, &ldquo;Using the convention object&rdquo;</a>).</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;20.4.&nbsp;Scala plugin - source set properties</b></p><div class="table-contents"><table id="N123DE"><thead><tr>
+                    <td>Property name</td>
+                    <td>Type</td>
+                    <td>Default value</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">scala</code>
+                </td>
+                <td>
+                    <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/file/SourceDirectorySet.html" target="_top">
+              <code class="classname">SourceDirectorySet</code>
+            </a> (read-only)
+                </td>
+                <td>
+                    Not null
+                </td>
+                <td>
+                    The Scala source files of this source set. Contains all <code class="filename">.scala</code> and
+                    <code class="filename">.java</code> files found in the Scala source directories, and excludes all other
+                    types of files.
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">scala.srcDirs</code>
+                </td>
+                <td>
+                    <code class="classname">Set&lt;File&gt;</code>. Can set using anything described in <a class="xref" href="working_with_files.html#sec:specifying_multiple_files" title="14.4.&nbsp;Specifying a set of files">Section&nbsp;14.4, &ldquo;Specifying a set of files&rdquo;</a>.
+                </td>
+                <td>
+                    <code class="literal">[<em class="replaceable"><code>projectDir</code></em>/src/<em class="replaceable"><code>name</code></em>/scala]</code>
+                </td>
+                <td>
+                    The source directories containing the Scala source files of this source set. May also contain
+                    Java source files for joint compilation.
+                </td>
+            </tr><tr>
+                <td>
+                    <code class="literal">allScala</code>
+                </td>
+                <td>
+                    <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/file/FileTree.html" target="_top">
+              <code class="classname">FileTree</code>
+            </a> (read-only)
+                </td>
+                <td>
+                    Not null
+                </td>
+                <td>
+                    All Scala source files of this source set. Contains only the <code class="filename">.scala</code> files
+                    found in the Scala source directories.
+                </td>
+            </tr></table></div></div><p>These convention properties are provided by a convention object of type <a class="ulink" href="http://www.gradle.org/0.8/docs/javadoc/org/gradle/api/tasks/ScalaSourceSet.html" target="_top">
+          <code class="classname">ScalaSourceSet</code>
+        </a>.</p><p>The Scala plugin also modifies some source set properties:</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;20.5.&nbsp;Scala plugin - source set properties</b></p><div class="table-contents"><table id="N12454"><thead><tr>
+                    <td>Property name</td>
+                    <td>Change</td>
+                </tr></thead><tr>
+                <td>
+                    <code class="literal">allJava</code>
+                </td>
+                <td>Adds all <code class="filename">.java</code> files found in the Scala source directories.</td>
+            </tr><tr>
+                <td>
+                    <code class="literal">allSource</code>
+                </td>
+                <td>Adds all source files found in the Scala source directories.</td>
+            </tr></table></div></div></div></div><div class="navfooter"><div><div class="navbar"><a href="groovy_plugin.html" title="Chapter&nbsp;19.&nbsp;The Groovy Plugin">Previous</a><span>|</span><a href="war_plugin.html" title="Chapter&nbsp;21.&nbsp;The War Plugin">Next</a><span>|</span><a href="userguide.html">Contents</a></div></div></div></body></html>
