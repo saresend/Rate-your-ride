@@ -136,7 +136,7 @@ public class MainActivity extends Activity implements BluetoothAdapter.LeScanCal
             String df = DateFormat.getInstance().format(System.currentTimeMillis());
             TextView timerView = (TextView) findViewById(R.id.textView5);
             long secondVal = (System.currentTimeMillis() - startTime)/1000;
-            timerView.setText("RIDE TIME: "+ (Long.toString(secondVal)));
+            timerView.setText("Ride Time: "+ (Long.toString(secondVal)));
         }
     };
     @Override
