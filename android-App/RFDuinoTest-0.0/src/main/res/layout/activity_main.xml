@@ -57,7 +57,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/textView4"
-            android:text="Device Info"
+            android:text="Longboard Info"
             android:layout_marginTop="5dip" />
 
         <TextView

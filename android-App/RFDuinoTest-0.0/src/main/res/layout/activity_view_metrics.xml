@@ -36,14 +36,30 @@
         android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="30dp"/>
+        android:paddingBottom="40dp"/>
+    <TextView
+        android:id="@+id/graphTitle"
+        android:layout_below="@id/bumpValue"
+        android:layout_centerHorizontal="true"
+        android:text="Your ride, visualized:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp"/>
 
+
+    <LinearLayout
+        android:padding = "2dp"
+        android:layout_below="@id/graphTitle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <WebView
         android:id="@+id/graphView"
-        android:layout_below="@id/bumpValue"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"/>
+
+    </LinearLayout>
+
 
 </RelativeLayout>

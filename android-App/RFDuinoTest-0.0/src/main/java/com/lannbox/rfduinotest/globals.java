@@ -15,6 +15,7 @@ public class globals {
 
     }
     private String sessionID;
+    private String bumpinessString;
 
     public String getSessionID() {
         return sessionID;
@@ -22,6 +23,8 @@ public class globals {
     public void setSessionID(String sessionID) {
         this.sessionID = sessionID;
     }
+    public String getBumpinessString() { return bumpinessString;}
+    public void setBumpinessString(String bumpString) { this.bumpinessString = bumpString;}
 
 
 

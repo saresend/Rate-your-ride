@@ -1,7 +1,9 @@
 package com.lannbox.rfduinotest;
 
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -15,11 +17,17 @@ import java.net.URL;
 
 public class getMetricsTask extends AsyncTask {
 
+    private Activity myActivity;
+
+    public getMetricsTask(Activity activity) {
+        this.myActivity = activity;
+    }
+
     public String bumpinessFactor;
     @Override
     protected String doInBackground(Object[] params) {
         try {
-        String urlString = "Set-URL";
+        String urlString = "http://ec2-35-161-86-195.us-west-2.compute.amazonaws.com/bumpiness?sessionId="+globals.getInstance().getSessionID();
         String responseString;
         URL baseUrl = new URL(urlString);
         HttpURLConnection connector = (HttpURLConnection) baseUrl.openConnection();
@@ -31,7 +39,8 @@ public class getMetricsTask extends AsyncTask {
             sb.append(responseString);
         }
         Log.e("dasf", sb.toString());
-        bumpinessFactor = sb.toString();
+            bumpinessFactor = sb.toString();
+        globals.getInstance().setBumpinessString(sb.toString());
     } catch (Exception e) {
             Log.e("Errors:", e.toString());
         }
@@ -42,7 +51,8 @@ public class getMetricsTask extends AsyncTask {
     @Override
     protected void onPostExecute(Object o) {
         super.onPostExecute(o);
-        Log.e("onPostExecute:",o.toString());
-
+        String trunValue = o.toString().substring(0,3);
+        TextView bumpView = (TextView) myActivity.findViewById(R.id.bumpValue);
+        bumpView.setText(trunValue);
     }
 }
